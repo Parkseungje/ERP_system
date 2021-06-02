@@ -1,6 +1,6 @@
 ## ERP_system
 
-![](https://github.com/sungbolee/O9O9-backend/raw/master/doc/O9O9.png)
+<img width="704" alt="ERP시스템 이미지" src="https://user-images.githubusercontent.com/67890628/120408084-445fd880-c389-11eb-810f-de192e8110e3.png">
 
 ## About O9O9
 > 이베이 코리아에서 운영중인 오픈마켓 [G9]를 클론하는 프로젝트
