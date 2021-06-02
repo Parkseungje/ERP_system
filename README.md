@@ -20,6 +20,8 @@
 ## 적용기술
 
 **Front-end**
+- HTML5
+- CSS3
 - JavaScript
 - jQuery
 - Ajax
