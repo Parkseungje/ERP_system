@@ -19,10 +19,28 @@
 
 ## 적용기술
 
-- Front-end : JavaScript, jQuery, Ajax, Bootstrap, Vue.js
-- Back-end : Java, Spring, Maven, Mybatis
-- DBMS : MySQL
-- 협업툴: Notion, Slack, SVN, exERD, ERDcloud
+Front-end
+- JavaScript
+- jQuery
+- Ajax
+- Bootstrap
+- Vue.js
+
+Back-end 
+- Java
+- Spring
+- Maven 
+- Mybatis
+
+DBMS
+- MySQL
+
+협업툴
+- Notion
+- Slack
+- SVN
+- exERD
+- ERDcloud
 
 ## 구현 기능 및 개인 역할
 
