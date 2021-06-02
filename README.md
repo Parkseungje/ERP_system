@@ -1,4 +1,5 @@
-<img width="704" alt="ERP시스템 이미지" src="https://user-images.githubusercontent.com/67890628/120408084-445fd880-c389-11eb-810f-de192e8110e3.png">
+![메인이미지](https://user-images.githubusercontent.com/67890628/120417825-73cb1100-c39a-11eb-8740-50edae13a541.png)
+
 
 ## 📌About ERP_system
 > 전사적 자원 관리(ERP)는 회계, 구매, 리스크 관리 등 일상적인 비즈니스 프로세스를 하나로 묶고 이들 사이의 데이터 흐름을 가능하게 합니다. 오늘날 ERP 시스템은 모든 규모와 모든 산업에서 수많은 비즈니스를 관리하는데 유용하며 꼭 필요한 필수적 요소입니다.
