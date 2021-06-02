@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.apiTest.BookDao">
+
+
+	<select id="cntBook" parameterType="String" resultType="Integer">
+		SELECT		
+			count(*)
+		FROM tb_book 
+		where itemId=#{itemId}
+	</select>
+
+	<insert id="insertBook" parameterType="List">
+		insert into 
+			tb_book (
+				itemId
+				, title
+				, isbn
+				, author
+				, translator
+				, description
+				, priceStandard
+				, coverSmallUrl
+				, coverLargeUrl
+				, categoryName
+				, categoryId
+				, publisher
+				, pubDate
+				)
+		values(
+			#{itemId}
+			, #{title}
+			, #{isbn}
+			, #{author}
+			, #{translator}
+			, #{description}
+			, #{priceStandard}
+			, #{coverSmallUrl}
+			, #{coverLargeUrl}
+			, #{categoryName}
+			, #{categoryId}
+			, #{publisher}
+			, #{pubDate}
+			)
+	</insert>
+	
+</mapper>

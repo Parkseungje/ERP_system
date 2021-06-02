@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.employee.dao.EmpPaymentDao">
+	
+	<!-- 급여지급내역 전체조회 -->
+	<select id = "empPaymentList" resultType = "kr.happyjob.study.employee.model.EmployeeModel">
+		
+		<if test = "(flag != null) and (flag eq '1'.toString())">
+		    SELECT DATE_FORMAT(sl.payment_date, '%Y-%m-%d') as 'payment_date'
+		    	 , emp.dept_cd
+		    	 , emp.POScd
+		    	 , ui.loginID
+		    	 , ui.name
+		    	 , emp.year_salary
+		    	 , emp.salary
+		    	 , emp.nat_ps
+		    	 , emp.h_insure
+		    	 , emp.ohs_insure
+		    	 , emp.e_insure
+		    	 , emp.income_tax
+		    	 , SUM(al.extra_pay) AS 'extra_pay'
+				 , (emp.salary - emp.nat_ps - emp.h_insure - emp.ohs_insure - emp.e_insure - emp.income_tax) AS 'net_pay'
+				 , (SELECT COUNT(*) 
+				 		FROM tb_sal_his sl
+						WHERE emp.loginID = sl.loginID and DATE_FORMAT(sl.payment_date, '%Y-%m') = #{from_date})as payment_st
+			FROM tb_emp emp
+				INNER JOIN tb_userinfo ui ON ui.loginID = emp.loginID
+				LEFT JOIN tb_sal_his sl ON sl.loginID = emp.loginID
+				LEFT JOIN (SELECT IF((MONTH(di.dv_use_date) = MONTH('#{from_date}') - 1), di.dv_amt, 0) AS extra_pay, di.loginID 
+  								FROM tb_dv_info di
+						   WHERE (di.dv_no LIKE 'D%' OR di.dv_no LIKE 'E%' OR di.dv_no LIKE 'F%') AND (di.dv_app_yn LIKE '2'))al ON emp.loginID = al.loginID
+			<where><!-- 검색 조건 -->
+				<if test="(from_date != null) and (!from_date.equals(''))">
+					AND DATE_FORMAT(sl.payment_date, '%Y-%m') = #{from_date}
+				</if>
+				<if test = "(searchKey_dept != null) and (!searchKey_dept.equals(''))">
+					AND emp.dept_cd = #{searchKey_dept}
+				</if>
+				<if test = "(searchKey_poscd != null) and (!searchKey_poscd.equals(''))">
+					AND emp.POScd = #{searchKey_poscd}
+				</if>
+				<if test="(searchKey != null) and (!searchKey.equals(''))">
+					<choose>
+						<when test="(searchKey != null) and (searchKey eq 'loginID'.toString())">
+							AND ui.loginID LIKE CONCAT('%', #{searchWord}, '%')
+						</when>
+						<when test="(searchKey != null) and (searchKey eq 'name'.toString())">
+							AND ui.name Like CONCAT('%', #{searchWord}, '%')
+						</when>
+					</choose>
+				</if>
+				<if test ="(payment_state != null) and (!payment_state.equals(''))">
+					<choose>
+						<when test = "(payment_state != null) and (payment_state eq '0'.toString())">
+							AND (SELECT COUNT(*) 
+				 				FROM tb_sal_his sl
+							WHERE emp.loginID = sl.loginID and DATE_FORMAT(sl.payment_date, '%Y-%m') = #{from_date}) = '0'
+						</when>
+						<when test = "(payment_state != null) and (payment_state eq '1'.toString())">
+							AND (SELECT COUNT(*) 
+				 				FROM tb_sal_his sl
+							WHERE emp.loginID = sl.loginID and DATE_FORMAT(sl.payment_date, '%Y-%m') = #{from_date}) = '1'
+						</when>
+					</choose>
+				</if>
+			</where>
+			AND emp.out_yn = 'n'
+			GROUP BY emp.loginID
+			ORDER BY emp.loginID DESC
+			<if test="(pageIndex != null) and (!pageIndex.equals('')) and (pageSize != null) and (!pageSize.equals(''))">
+				LIMIT #{pageIndex},#{pageSize}
+			</if>
+		</if>
+		
+		<if test = "(flag != null) and (flag eq '2'.toString())">
+		    SELECT DATE_FORMAT(sl.payment_date, '%Y-%m-%d') as 'payment_date'
+		    	 , emp.dept_cd
+		    	 , emp.POScd
+		    	 , ui.loginID
+		    	 , ui.name
+		    	 , sl.year_salary
+		    	 , sl.salary
+		    	 , sl.nat_ps
+		    	 , sl.h_insure
+		    	 , sl.ohs_insure
+		    	 , sl.e_insure
+		    	 , sl.income_tax
+		    	 , SUM(al.extra_pay)
+			FROM tb_sal_his sl
+				LEFT JOIN tb_userinfo ui ON ui.loginID = sl.loginID
+				LEFT JOIN tb_emp emp ON emp.loginID = sl.loginID
+				LEFT JOIN (SELECT IF((MONTH(di.dv_use_date) = MONTH('#{from_date}') - 1), di.dv_amt, 0) AS extra_pay, di.loginID 
+  								FROM tb_dv_info di
+						   WHERE (di.dv_no LIKE 'D%' OR di.dv_no LIKE 'E%' OR di.dv_no LIKE 'F%') AND (di.dv_app_yn LIKE '2'))al ON emp.loginID = al.loginID
+			<where><!-- 검색 조건 -->
+				<if test="(from_date != null) and (!from_date.equals(''))">
+					AND DATE_FORMAT(sl.payment_date, '%Y-%m') = #{from_date}
+				</if>
+				<if test = "(searchKey_dept != null) and (!searchKey_dept.equals(''))">
+					AND emp.dept_cd = #{searchKey_dept}
+				</if>
+				<if test = "(searchKey_poscd != null) and (!searchKey_poscd.equals(''))">
+					AND emp.POScd = #{searchKey_poscd}
+				</if>
+				<if test="(searchKey != null) and (!searchKey.equals(''))">
+					<choose>
+						<when test="(searchKey != null) and (searchKey eq 'loginID'.toString())">
+							AND ui.loginID LIKE CONCAT('%', #{searchWord}, '%')
+						</when>
+						<when test="(searchKey != null) and (searchKey eq 'name'.toString())">
+							AND ui.name Like CONCAT('%', #{searchWord}, '%')
+						</when>
+					</choose>
+				</if>
+				<if test ="(payment_state != null) and (!payment_state.equals(''))">
+					<choose>
+						<when test = "(payment_state != null) and (payment_state eq '0'.toString())">
+							AND (SELECT COUNT(*) 
+				 				FROM tb_sal_his sl
+							WHERE emp.loginID = sl.loginID and DATE_FORMAT(sl.payment_date, '%Y-%m') = #{from_date}) = '0'
+						</when>
+						<when test = "(payment_state != null) and (payment_state eq '1'.toString())">
+							AND (SELECT COUNT(*) 
+				 				FROM tb_sal_his sl
+							WHERE emp.loginID = sl.loginID and DATE_FORMAT(sl.payment_date, '%Y-%m') = #{from_date}) = '1'
+						</when>
+					</choose>
+				</if>
+			</where>
+			ORDER BY emp.loginID DESC
+			<if test="(pageIndex != null) and (!pageIndex.equals('')) and (pageSize != null) and (!pageSize.equals(''))">
+				LIMIT #{pageIndex},#{pageSize}
+			</if>
+		</if>		
+	</select>
+	
+	<!-- 급여지급내역 전체조회 총 글 수 가져오기 -->
+	<select id = "countEmpPaymentList" resultType = "int">
+		<if test = "(flag != null) and (flag eq '1'.toString())">
+			SELECT COUNT(*) AS tot_cnt 
+				FROM tb_emp emp
+			INNER JOIN tb_userinfo ui ON ui.loginID = emp.loginID
+			<where><!-- 검색 조건 -->
+				<if test="(from_date != null) and (!from_date.equals(''))">
+					AND DATE_FORMAT(sl.payment_date, '%Y-%m') = #{from_date}
+				</if>
+				<if test = "(searchKey_dept != null) and (!searchKey_dept.equals(''))">
+					AND emp.dept_cd = #{searchKey_dept}
+				</if>
+				<if test = "(searchKey_poscd != null) and (!searchKey_poscd.equals(''))">
+					AND emp.POScd = #{searchKey_poscd}
+				</if>
+				<if test="(searchKey != null) and (!searchKey.equals(''))">
+					<choose>
+						<when test="(searchKey != null) and (searchKey eq 'loginID'.toString())">
+							AND ui.loginID LIKE CONCAT('%', #{searchWord}, '%')
+						</when>
+						<when test="(searchKey != null) and (searchKey eq 'name'.toString())">
+							AND ui.name Like CONCAT('%', #{searchWord}, '%')
+						</when>
+					</choose>
+				</if>
+				<if test ="(payment_state != null) and (!payment_state.equals(''))">
+					<choose>
+						<when test = "(payment_state != null) and (payment_state eq '0'.toString())">
+							AND (SELECT COUNT(*) 
+				 				FROM tb_sal_his sl
+							WHERE emp.loginID = sl.loginID and DATE_FORMAT(sl.payment_date, '%Y-%m') = #{from_date}) = '0'
+						</when>
+						<when test = "(payment_state != null) and (payment_state eq '1'.toString())">
+							AND (SELECT COUNT(*) 
+				 				FROM tb_sal_his sl
+							WHERE emp.loginID = sl.loginID and DATE_FORMAT(sl.payment_date, '%Y-%m') = #{from_date}) = '1'
+						</when>
+					</choose>
+				</if>
+			</where>
+			AND emp.out_yn = 'n'
+		</if>
+		
+		<if test = "(flag != null) and (flag eq '2'.toString())">
+			SELECT COUNT(*) AS tot_cnt 
+				FROM tb_sal_his sl
+			LEFT JOIN tb_userinfo ui ON ui.loginID = sl.loginID
+			LEFT JOIN tb_emp emp ON emp.loginID = sl.loginID
+		<where><!-- 검색 조건 -->
+				<if test="(from_date != null) and (!from_date.equals(''))">
+					AND DATE_FORMAT(sl.payment_date, '%Y-%m') = #{from_date}
+				</if>
+				<if test = "(searchKey_dept != null) and (!searchKey_dept.equals(''))">
+					AND emp.dept_cd = #{searchKey_dept}
+				</if>
+				<if test = "(searchKey_poscd != null) and (!searchKey_poscd.equals(''))">
+					AND emp.POScd = #{searchKey_poscd}
+				</if>
+				<if test="(searchKey != null) and (!searchKey.equals(''))">
+					<choose>
+						<when test="(searchKey != null) and (searchKey eq 'loginID'.toString())">
+							AND ui.loginID LIKE CONCAT('%', #{searchWord}, '%')
+						</when>
+						<when test="(searchKey != null) and (searchKey eq 'name'.toString())">
+							AND ui.name Like CONCAT('%', #{searchWord}, '%')
+						</when>
+					</choose>
+				</if>
+				<if test ="(payment_state != null) and (!payment_state.equals(''))">
+					<choose>
+						<when test = "(payment_state != null) and (payment_state eq '0'.toString())">
+							AND (SELECT COUNT(*) 
+				 				FROM tb_sal_his sl
+							WHERE emp.loginID = sl.loginID and DATE_FORMAT(sl.payment_date, '%Y-%m') = #{from_date}) = '0'
+						</when>
+						<when test = "(payment_state != null) and (payment_state eq '1'.toString())">
+							AND (SELECT COUNT(*) 
+				 				FROM tb_sal_his sl
+							WHERE emp.loginID = sl.loginID and DATE_FORMAT(sl.payment_date, '%Y-%m') = #{from_date}) = '1'
+						</when>
+					</choose>
+				</if>
+			</where>
+		</if>
+	</select>
+</mapper>

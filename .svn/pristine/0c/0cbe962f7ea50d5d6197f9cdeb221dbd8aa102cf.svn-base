@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.system.dao.MnuMgrDao">
+
+
+	
+	<!-- 구분별 메뉴ID 조회 -->
+	<select id="selectMnuIdLst" resultType="kr.happyjob.study.system.model.MnuMgrLstModel">
+		/* kr.kosmo.jobkorea.system.dao.MnuMgrDao.selectMnuIdLst */
+		SELECT mnu_id
+		FROM tm_mnu_mst
+		WHERE 1=1
+		AND dlt_poa = 'N'
+		AND use_poa = 'Y'
+		AND mnu_dvs_cod = #{mnu_dvs_cod}
+	</select>
+	
+	<!-- 메뉴 단건 조회 -->
+	<select id="selectMnu" resultType="kr.happyjob.study.system.model.MnuMgrModel">
+		/* kr.kosmo.jobkorea.system.dao.MnuMgrDao.selectMnu */
+		SELECT	mm.mnu_id
+			, mm.hir_mnu_id
+			, mm.mnu_nm
+			, mm.mnu_url
+			, mm.mnu_dvs_cod
+			, mm.grp_num
+			, mm.odr
+			, mm.lvl
+			, mm.mnu_ico_cod
+			, V_MNU_ICO.DTL_COD_NM AS mnu_ico_nm
+			, mm.use_poa
+			, mm.dlt_poa
+			, mm.fst_enlm_dtt
+			, mm.fst_rgst_sst_id
+			, mm.fnl_mdfd_dtt
+			, mm.fnl_mdfr_sst_id
+			, mm.mem_author
+		FROM tm_mnu_mst mm
+	    LEFT OUTER JOIN (
+	          SELECT  dtl_cod
+	              ,   dtl_cod_nm
+	          FROM    tc_comn_dtl_cod
+	          WHERE   grp_cod = 'MNU_ICO'
+	      ) V_MNU_ICO
+	  	ON mm.mnu_ico_cod = V_MNU_ICO.dtl_cod
+		WHERE mm.mnu_id = #{mnu_id}
+	</select>
+		
+	<!-- 메뉴 저장 -->
+	<insert id="insertMnu">
+		/* kr.kosmo.jobkorea.system.dao.MnuMgrDao.insertMnu */
+       <selectKey resultType="string" keyProperty="menuID" order="BEFORE">
+            SELECT CONCAT('M', LPAD(IFNULL(CAST(SUBSTR(MAX(mnu_id),2,4) AS UNSIGNED),0)+1, 4, '0'))  FROM tm_mnu_mst
+        </selectKey>   
+		INSERT INTO tm_mnu_mst
+		(
+				mnu_id
+			, hir_mnu_id
+			, mnu_nm
+			, mnu_url
+			, mnu_dvs_cod
+			, grp_num
+			, odr
+			, lvl
+			<if test ="mnu_ico_cod != null and mnu_ico_cod != ''">
+			, mnu_ico_cod
+			</if>
+			, use_poa
+			, fst_enlm_dtt
+			, fst_rgst_sst_id
+			, fnl_mdfd_dtt
+			, fnl_mdfr_sst_id
+			, mem_author
+		)
+		
+		VALUES
+		(
+				#{menuID}
+			<choose>
+				<when test ="hir_mnu_id != null and hir_mnu_id != ''">
+					, #{hir_mnu_id}
+				</when>
+				<otherwise>
+					, #{menuID}
+				</otherwise>
+			</choose>
+			, #{mnu_nm}
+			, #{mnu_url}
+			, #{mnu_dvs_cod}
+			<choose>
+				<when test ="grp_num != null and grp_num != ''">
+					, #{grp_num}
+				</when>
+				<otherwise>
+					, (SELECT MAX(A.GRP_NUM) + 1 FROM tm_mnu_mst A )
+				</otherwise>
+			</choose>
+			, #{odr}
+			, #{lvl}
+			<if test ="mnu_ico_cod != null and mnu_ico_cod != ''">
+			, #{mnu_ico_cod}
+			</if>
+			, #{use_poa}
+			, NOW()
+			, #{fst_rgst_sst_id}
+			, NOW()
+			, #{fnl_mdfr_sst_id}
+			, #{mem_author}
+		)		
+	</insert>
+	
+	<!-- 메뉴 수정 -->
+	<update id="updateMnu">
+		/* kr.kosmo.jobkorea.system.dao.MnuMgrDao.updateMnu */
+		UPDATE tm_mnu_mst SET
+			mnu_nm		= #{mnu_nm}         
+			, mnu_url		= #{mnu_url}
+			<if test ="mnu_ico_cod != null and mnu_ico_cod != ''">
+			, mnu_ico_cod = #{mnu_ico_cod}
+			</if>
+			, odr		= #{odr}   
+			, use_poa		= #{use_poa}   
+			, fnl_mdfd_dtt	= NOW() 
+			, fnl_mdfr_sst_id = #{fnl_mdfr_sst_id}
+			, mem_author = #{mem_author}
+		WHERE	mnu_id = #{mnu_id}
+	
+	</update>
+	
+	<!-- 메뉴 삭제 -->
+	<delete id="deleteMnu">
+		/* kr.kosmo.jobkorea.system.dao.MnuMgrDao.deleteMnu */
+		DELETE FROM tm_mnu_mst WHERE mnu_id = #{mnu_id}
+	</delete>
+	
+	<!-- 메뉴 순서 다듬기 위해 사용자 정의 변수 선언 -->
+	<insert id="setSortMnuVal">
+		/* kr.kosmo.jobkorea.system.dao.MnuMgrDao.setSortMnuVal */
+		set @sorter=0
+	</insert>
+	
+	<!-- 메뉴 순서 다듬기 -->
+	<update id="upDateSortMnuVal">
+		/* kr.kosmo.jobkorea.system.dao.MnuMgrDao.upDateSortMnuVal */
+		UPDATE tm_mnu_mst SET odr=@sorter:=@sorter+1 WHERE 1=1 
+		<if test ="hir_mnu_id != null and hir_mnu_id != ''">
+			AND hir_mnu_id = #{hir_mnu_id}
+		</if>
+		AND lvl = #{lvl}
+		AND mnu_dvs_cod = #{mnu_dvs_cod}
+		ORDER BY odr
+	</update>
+	
+	<!-- 메뉴 순서 밀기 -->
+	<update id="pushSortMnuVal">
+		/* kr.kosmo.jobkorea.system.dao.MnuMgrDao.pushSortMnuVal */
+	UPDATE tm_mnu_mst SET odr=odr+1 WHERE 1=1
+	<if test ="hir_mnu_id != null and hir_mnu_id != ''">
+		AND hir_mnu_id = #{hir_mnu_id}
+	</if>
+	AND odr >= #{number}
+	AND lvl = #{lvl}
+	AND mnu_dvs_cod = #{mnu_dvs_cod}
+	</update>
+	
+	<!-- 메뉴권한 삭제 -->
+	<delete id="deleteMnuAtrt">
+		/* kr.kosmo.jobkorea.system.dao.MnuMgrDao.deleteMnuAtrt */
+		DELETE FROM tn_usr_mnu_atrt WHERE mnu_id = #{mnu_id}
+	</delete>
+	
+	<!-- 선택된 메뉴 권한 없는 시스템 아이디 조회 -->
+	<select id="nExstMnuUsrSstIdLst" resultType="hashMap">
+		/* kr.kosmo.jobkorea.system.dao.MnuMgrDao.nExstMnuUsrSstIdLst */
+		SELECT um.usr_sst_id AS usr_sst_id
+		FROM tm_usr_mst um
+		LEFT OUTER JOIN tm_ofc_mst om
+		ON um.OFC_ID = om.OFC_ID
+		LEFT OUTER JOIN (SELECT uma.usr_sst_id
+		            FROM tn_usr_mnu_atrt uma
+		            WHERE 1=1
+		            AND uma.mnu_id IN ( #{mnu_id} )) ma
+		ON um.USR_SST_ID = ma.USR_SST_ID
+		WHERE 1=1
+		AND om.ofc_dvs_cod = #{ofc_dvs_cod}
+		AND ma.usr_sst_id is null
+	</select>
+</mapper>

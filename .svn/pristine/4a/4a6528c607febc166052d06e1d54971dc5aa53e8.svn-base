@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.dashboard.dao.DashboardGedDao">
+	
+	<select id="selectMonthProfit" resultType="kr.happyjob.study.dashboard.model.MonthProfitVO">
+	    SELECT profit.order_date, sum(profit.profit_price * profit.order_qty) as month_profit
+        FROM
+        (
+        SELECT sum(order_qty) as order_qty, (product.pro_price - product.pro_deli_price) as profit_price,  DATE_FORMAT(orders.order_date, '%Y-%m') as order_date
+        FROM tb_order orders, tb_product product
+        WHERE orders.pro_no = product.pro_no
+        AND orders.order_cd = 'complete'
+        AND DATE_FORMAT(orders.order_date, '%Y-%m') 
+        <![CDATA[
+        <=
+        ]]>  DATE_FORMAT(curdate(), '%Y-%m')
+        
+        GROUP BY product.pro_no, DATE_FORMAT(orders.order_date, '%Y-%m') 
+        
+        
+        ) profit
+        GROUP BY profit.order_date
+        ORDER BY profit.order_date
+	</select>
+	
+	<select id="selectMonthProduct" resultType="kr.happyjob.study.dashboard.model.MonthProductVO">
+		SELECT product.pro_no, product.pro_name, ((product.pro_price - product.pro_deli_price)*orders.pro_qty) as profit_price
+		FROM 
+        
+        (
+        SELECT orders.pro_no, sum(orders.pro_qty) as pro_qty, orders.order_date
+        FROM
+        (
+        
+		SELECT userinfo.user_company, orders.order_no, orders.pro_no, sum(order_qty) as pro_qty, DATE_FORMAT(orders.order_date, '%Y-%m') as order_date
+
+		FROM tb_order orders, tb_userinfo userinfo
+
+		WHERE orders.loginID = userinfo.loginID
+		AND orders.order_cd = 'complete'        
+		AND DATE_FORMAT(orders.order_date, '%Y-%m') = DATE_FORMAT(curdate(), '%Y-%m')
+
+        
+        GROUP BY orders.pro_no, DATE_FORMAT(orders.order_date, '%Y-%m') 
+        
+        ) orders
+        GROUP BY orders.pro_no
+        ) orders
+        
+        
+        LEFT JOIN tb_product product
+        ON orders.pro_no = product.pro_no
+        
+        GROUP BY orders.pro_no
+        
+        ORDER BY profit_price desc
+	</select>
+	
+	<select id="selectMonthCompany" resultType="kr.happyjob.study.dashboard.model.MonthCompanyVO">
+		SELECT detail_company_order.user_company, sum(detail_company_order.sales_price) as sales_price, sum(detail_company_order.profit_price) as profit_price
+		FROM
+		(
+		SELECT company_order.*,  (product.pro_price * company_order.order_qty) as sales_price, ((product.pro_price - product.pro_deli_price) * company_order.order_qty) as profit_price
+		FROM
+		(
+		SELECT userinfo.user_company, orders.order_no, orders.pro_no, order_qty, DATE_FORMAT(orders.order_date, '%Y-%m') as order_date
+
+		FROM tb_order orders, tb_userinfo userinfo
+
+		WHERE orders.loginID = userinfo.loginID
+		AND orders.order_cd = 'complete'
+		AND DATE_FORMAT(orders.order_date, '%Y-%m') = DATE_FORMAT(curdate(), '%Y-%m')
+        
+        
+		) company_order
+		LEFT JOIN tb_product product
+		ON company_order.pro_no = product.pro_no
+        
+        
+		) detail_company_order
+		GROUP BY detail_company_order.user_company
+		ORDER BY profit_price desc
+	</select>
+	
+</mapper>

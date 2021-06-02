@@ -1,0 +1,213 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<title>공지사항</title>
+<jsp:include page="/WEB-INF/view/common/common_include.jsp"></jsp:include>
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+<script src="${CTX_PATH}/js/summernote/summernote-ko-KR.js"></script>
+
+
+</head>
+<body>
+<form id="myForm">
+	<div id="mask"></div>
+	<div id="wrap_area">
+	<jsp:include page="/WEB-INF/view/common/header.jsp"></jsp:include>
+	<div id="container">
+		<ul>
+			<li class="lnb"><jsp:include page="/WEB-INF/view/common/lnbMenu.jsp"></jsp:include></li>
+			<li class="contents">
+				<h3 class="hidden">contents 영역</h3>
+				<div class="content">
+					<p class="Location">
+						<a href="" class="btn_set home">메인으로</a> 
+						<a href="" class="btn_nav">학습지원</a> <span class="btn_nav bold">공지사항</span>
+						<a href="" class="btn_set refresh">새로고침</a>
+					</p>
+				
+				<!-- 관리자 공지사항 리스트 조회  -->
+				<div class="divComGrpCodList">
+					<p class="conTitle">               
+					  <span>회계전표 조회</span>
+ 					  <span class="fr" style="margin-top:3px;"> 
+                         <span><input type="date" id="from_date"> ~ <input type="date" id="to_date"></span><br>
+ 						 <span>
+					    	<select id="adm_type" style="width: 90px;">
+                               <option value="all" selected="selected">거래처 전체</option>
+                               <option value="content1"></option>
+                               <option value="content2"></option>
+                            </select>
+                         </span>
+                         <input placeholder="계정코드" type="text" id="" style="width: 200px; height: 28px;" onKeyDown="if(event.keyCode == 13) javascript:fAdmList()">
+                         <input placeholder="계정과목" type="text" id="" style="width: 200px; height: 28px;" onKeyDown="if(event.keyCode == 13) javascript:fAdmList()">
+ 						 <a class="btnType blue" href="javascript:fAdmList()" ><span id="searchEnter">조회</span></a>
+ 					  </span>
+				    </p> 
+				    <a href="javascript:gfModalPop('#layer2');" class="btnType blue fr" id="submitBtn"><span style="margin-bottom:10px;">상세조회</span></a>
+					<table class="col">
+					<caption>caption</caption>
+						<colgroup>
+							<col width="10%">
+							<col width="10%">
+							<col width="10%">
+							<col width="10%">
+							<col width="10%">
+							<col width="5%">
+							<col width="10%">
+							<col width="10%">
+							<col width="10%">
+						</colgroup>
+						<thead>
+							<tr>
+								<th scope="col">전표번호</th>
+								<th scope="col">수주일자</th>
+								<th scope="col">수주번호</th>
+								<th scope="col">계정코드</th>
+								<th scope="col">계정과목</th>
+								<th scope="col">담당자</th>
+								<th scope="col">제목</th>
+								<th scope="col">작성자</th>
+								<th scope="col">등록일</th>
+							</tr>
+							
+						</thead>
+						<tbody id="admNoticeList">
+						<tr>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="paging_area" id="admPagination"></div>
+				<!-- 관리자 공지사항 리스트 조회  -->
+								<br><br>
+				
+	
+
+	<div id="layer1" class="layerPop layerType2" style="width: 650px; overflow:auto;">
+	</div>
+	</form>
+	
+	<form id="myForm">
+     <div id="layer2" class="layerPop layerType2" style="width: 900px; top: 111.5px; left: 220px; display: block;">
+      <dl>
+         <dt>
+            <strong>공지사항 등록하기</strong>
+         </dt>
+         <dd class="content">
+         
+        <h1 style="font-size:50px; height:50px; padding-top: 3%; width:50%; ">회계전표</h1>
+         
+            <table class="col">
+               
+               <colgroup>
+                  <col width="12%">
+                  <col width="*">
+                  <col width="12%">
+                  <col width="*">
+               </colgroup>
+				
+				<thead>
+                			<tr>
+								<th scope="col">전표번호</th>
+								<th scope="col">수주일자</th>
+								<th scope="col">수주번호</th>
+								<th scope="col">담당자</th>
+								<th scope="col">거래처</th>
+								<th scope="col">계정과목</th>
+								<th scope="col">지출</th>
+								<th scope="col">수입</th>
+								<th scope="col">비고</th>
+							</tr>
+				</thead>
+				
+               <tbody>
+                <tr>
+								<td scope="col"></td>
+								<td scope="col"></td>
+								<td scope="col"></td>
+								<td scope="col"></td>
+								<td scope="col"></td>
+								<td scope="col"></td>
+								<td scope="col"></td>
+								<td scope="col"></td>
+								<td scope="col"></td>
+							</tr>
+               </tbody>
+               
+            </table>
+            <div id="" style="width:73%; height:50px; background-color:black;"></div>
+            <div class="btn_areaC mt20">
+               <a href="javascript:fWrite();" class="btnType blue" id="submitBtn"><span id="">작성</span></a>
+               <a href="" class="btnType blue" id="closeBtn"><span id="">닫기</span></a>
+               
+            </div>
+         </dd>
+      </dl>
+      <a href="" class="closePop"><span class="hidden">닫기</span></a>
+   </div>
+  </form>
+ 
+	
+</body>
+</html>

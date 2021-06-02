@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.happyjob.study.dashboard.dao.DashboardDlmDao">
+	<!-- 배송담당자_기업고객_배송 지시서 목록 조회 -->
+	<select id="deliveryBuyerList" parameterType="Map" resultType="kr.happyjob.study.dashboard.model.DeliveryBuyerModel">
+		
+		SELECT tb_shipping.ship_no as ship_no,
+			   tb_shipping.ship_cd as ship_cd,
+		       tb_shipping.ship_qty as ship_qty,
+		       tb_shipping.ship_manager as ship_manager,
+		       tb_shipping.ship_date as ship_date,
+		       tb_order.order_no as order_no,
+		       tb_order.order_date as order_date,
+		       tb_product.pro_no as pro_no,
+		       tb_product.pro_name as pro_name,
+		       tb_direction.direction_date as direction_date,
+		       tb_warehouse.ware_name as ware_name,
+		       tb_warehouse.ware_address as ware_address,
+		       tb_warehouse.ware_dt_address as ware_dt_address,
+		       tb_warehouse.loginID as loginID,
+		       tb_userinfo.user_address as user_address,
+		       tb_userinfo.user_dt_address as user_dt_address,
+		       tb_userinfo.user_company as user_company,
+		       tb_userinfo.name as name,
+		       tb_userinfo.user_email as user_email,
+		       tb_userinfo.user_tel1 as user_tel1,
+		       tb_userinfo.user_tel2 as user_tel2,
+		       tb_userinfo.user_tel3 as user_tel3     
+		  FROM tb_shipping  
+		  
+		  LEFT OUTER JOIN tb_order
+				 ON tb_shipping.order_no=tb_order.order_no
+				 
+		  LEFT OUTER JOIN tb_direction
+		 		 ON tb_shipping.ship_no=tb_direction.ship_no
+		 		 
+		  LEFT OUTER JOIN tb_warehouse
+		 		 ON tb_shipping.ware_no=tb_warehouse.ware_no
+		 		 
+		  LEFT OUTER JOIN tb_userinfo
+		 		 ON tb_order.loginID=tb_userinfo.loginID
+		 		 
+  		  LEFT OUTER JOIN tb_product
+ 				 ON tb_shipping.pro_no=tb_product.pro_no
+		 <where>
+			AND tb_direction.direction_cd = 'shipping' 
+			AND tb_shipping.ship_cd = 'waiting' 
+			AND tb_order.order_cd = 'complete'
+			
+			<if test="(userNm != null) and (!userNm.equals(''))">
+					AND tb_shipping.ship_manager = #{userNm}
+			</if>
+	 		
+
+			<if test="(thisDate != null) and (!thisDate.equals(''))">
+	          AND DATE(#{thisDate}) = DATE(tb_order.order_date)
+	          </if>
+
+	 	</where>	
+	 	
+
+	 				
+	</select>
+
+</mapper>

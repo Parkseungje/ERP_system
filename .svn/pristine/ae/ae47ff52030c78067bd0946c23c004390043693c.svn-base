@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.system.dao.UserMgmtDao">
+
+	<!-- 사용자 목록 조회 -->
+	<select id = "userMgmtList" resultType = "kr.happyjob.study.system.model.UserMgmtModel">
+		SELECT
+				user_type
+			,	name
+			,	loginID as loginId
+			,	DATE_FORMAT(reg_date, '%Y-%m-%d') as regDate
+		FROM tb_userinfo
+		<where>
+			<if test ="(sname != null) and (!sname.equals(''))">
+			      and name Like CONCAT('%', #{sname}, '%')
+			 </if> 
+			  <if test="((oname != null) and (oname eq 'B'.toString()))">			  
+			      and user_type = 'B'
+			  </if>
+			  <if test="(oname != null) and oname eq 'C'.toString()">	
+			      and user_type = 'C'
+			  </if>		  
+		</where>
+		 ORDER BY reg_date DESC
+		 LIMIT #{pageIndex}, #{pageSize}
+	</select>
+	
+		
+		
+		
+	<!-- 사용자 목록 총 갯수 조회 -->
+	<select id="userMgmtCnt" resultType="int">
+		/*kr.kosmo.jobkorea.system.dao.UserMgmtDao.userMgmtCnt*/
+		SELECT COUNT(*)
+		FROM 	tb_userinfo
+		<where>
+			<if test ="(sname != null) and (!sname.equals(''))">
+			      and name Like CONCAT('%', #{sname}, '%')
+			 </if> 
+			  <if test="((oname != null) and (oname eq 'B'.toString()))">			  
+			      and user_type = 'B'
+			  </if>
+			  <if test="(oname != null) and oname eq 'C'.toString()">	
+			      and user_type = 'C'
+			  </if>		  
+		</where>
+		ORDER BY reg_date DESC
+	</select>	
+		
+	
+	
+	
+	<!-- 사용자 단건 조회 : 사용자 이름 클릭시 -->
+	<select id = "userMgmtDetail" resultType = "kr.happyjob.study.system.model.UserMgmtModel">
+		SELECT 	 	loginID as loginId
+					,	name
+					,	user_type
+					,	gender_cd
+					,	user_company
+					,	birthday
+					,	user_email
+					,	email_cop
+					,	user_zipcode
+					,	user_address
+					,	user_dt_address
+					,	user_tel1 as tel1
+					,	user_tel2 as tel2
+					,	user_tel3 as tel3
+		FROM	tb_userinfo
+		WHERE loginID = #{loginId}
+	</select>
+		
+		
+	
+
+</mapper>
+

@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!-- 맵퍼네임 -->
+<mapper namespace="kr.happyjob.study.business.dao.EmpSalePlanDao">
+
+	<!--  목록 조회 -->
+	<select id="planList" resultType="kr.happyjob.study.business.model.EmpSalePlanModel" parameterType ="hashmap" >
+	  SELECT
+	
+	             a.sales_pro_seq
+	            ,a.client_cd
+	            ,a.goal_amt
+	            ,a.large_classifi
+	            ,a.loginID
+	            ,a.memo
+	            ,a.product_cd
+	
+	            ,a.sales_reg_date
+	            ,a.small_classifi
+	            ,c.client_nm
+	            ,ifnull(re.estimate_cnt,0) estimate_cnt  <!-- null일때 0으로 출력 -->
+	            ,e.prod_nm
+	
+	
+	    FROM  tb_sales_pro a
+	        INNER JOIN tb_erp_client c ON c.client_cd = a.client_cd 				<!--  0. a와 연결해야되는 테이블 inner join -->
+	        INNER JOIN tb_scm_product e ON e.product_cd =a.product_cd    <!-- 0. a와 연결해야되는 테이블 inner join -->
+	        LEFT OUTER JOIN (
+	                            select b.loginID
+	                                  ,b.client_cd
+	                                  ,d.product_cd
+	                                  ,d.estimate_cnt
+	                              from tb_receive_info b
+	                                   INNER JOIN receive_prod d ON d.estimate_no = b.estimate_no  <!-- 1. 수주서,수주테이블에서 먼저 견적서번호로 조인한다 -->
+	                        ) re on re.client_cd = a.client_cd and re.product_cd = a.product_cd  <!--  2. 1에서 추출한 데이터의 거래처코드,제품코드를를 outer조인으로 연결 -->
+	
+	
+
+			
+
+	 <where>
+         <if test="(client_search != null) and (! client_search.equals(''))">
+             AND a.client_cd like #{client_search}
+         </if>
+         <if test="(from_date != null) and (! from_date.equals(''))">
+  			AND a.sales_reg_date  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         </if>
+         <if test="(to_date != null) and (!to_date.equals(''))">
+           AND a.sales_reg_date  <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         </if>         
+         
+      </where>
+
+		ORDER BY a.sales_pro_seq
+		LIMIT #{pageIndex}, #{pageSize}
+	</select>
+	
+
+
+
+	
+	<!-- 전체 목록 카운트  -->
+	<select id="planCnt" resultType="int"  parameterType="hashmap">
+		SELECT COUNT( a.sales_pro_seq)
+
+	    FROM  tb_sales_pro a
+	        INNER JOIN tb_erp_client c ON c.client_cd = a.client_cd 				<!--  0. a와 연결해야되는 테이블 inner join -->
+	        INNER JOIN tb_scm_product e ON e.product_cd =a.product_cd    <!-- 0. a와 연결해야되는 테이블 inner join -->
+	        LEFT OUTER JOIN (
+	                            select b.loginID
+	                                  ,b.client_cd
+	                                  ,d.product_cd
+	                                  ,d.estimate_cnt
+	                              from tb_receive_info b
+	                                   INNER JOIN receive_prod d ON d.estimate_no = b.estimate_no  <!-- 1. 수주서,수주테이블에서 먼저 견적서번호로 조인한다 -->
+	                        ) re on re.client_cd = a.client_cd and re.product_cd = a.product_cd  <!--  2. 1에서 추출한 데이터의 거래처코드,제품코드를를 outer조인으로 연결 :: 기준 : 계획서테이블 -->
+		 <where>
+         <if test="(client_search != null) and (! client_search.equals(''))">
+             AND a.client_cd like #{client_search} 	<!-- 카운트값 매칭 -->
+         </if>
+         <if test="(from_date != null) and (! from_date.equals(''))">
+  			AND a.sales_reg_date  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         </if>
+         <if test="(to_date != null) and (!to_date.equals(''))">
+           AND a.sales_reg_date  <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         </if>         
+         </where>
+
+      	ORDER BY a.sales_pro_seq
+
+	</select>
+
+
+	<!-- 단건조회  -->
+	<select id ="planListSelect" resultType ="kr.happyjob.study.business.model.EmpSalePlanModel" >
+	  SELECT
+	
+	             a.sales_pro_seq
+	            ,a.client_cd
+	            ,a.goal_amt
+	            ,a.large_classifi
+	            ,a.loginID
+	            ,a.memo
+	            ,a.product_cd
+	
+	            ,a.sales_reg_date
+	            ,a.small_classifi
+	            ,c.client_nm
+	            ,ifnull(re.estimate_cnt,0) estimate_cnt  <!-- null일때 0으로 출력 -->
+	            ,e.prod_nm
+	
+	
+	    FROM  tb_sales_pro a
+	        INNER JOIN tb_erp_client c ON c.client_cd = a.client_cd 				<!--  0. a와 연결해야되는 테이블 inner join -->
+	        INNER JOIN tb_scm_product e ON e.product_cd =a.product_cd    <!-- 0. a와 연결해야되는 테이블 inner join -->
+	        LEFT OUTER JOIN (
+	                            select b.loginID
+	                                  ,b.client_cd
+	                                  ,d.product_cd
+	                                  ,d.estimate_cnt
+	                              from tb_receive_info b
+	                                   INNER JOIN receive_prod d ON d.estimate_no = b.estimate_no  <!-- 1. 수주서,수주테이블에서 먼저 견적서번호로 조인한다 -->
+	                        ) re on re.client_cd = a.client_cd and re.product_cd = a.product_cd  <!--  2. 1에서 추출한 데이터의 거래처코드,제품코드를를 outer조인으로 연결 -->
+	
+	
+		WHERE a.sales_pro_seq = #{sales_pro_seq} 
+
+	</select>	
+	
+	
+		<!-- 신규등록  => 시퀀스 : selectKey -->
+	<insert id="insertPlanList" >
+
+        <selectKey resultType="string" keyProperty="sales_pro_seq" order="BEFORE">
+            SELECT MAX(sales_pro_seq AS UNSIGNED) + 1 
+            FROM tb_sales_pro 
+        </selectKey> 
+
+		INSERT INTO tb_sales_pro
+		(
+					client_cd
+					,goal_amt
+					,large_classifi
+					,loginID
+					,manufacturer
+					,memo
+					,product_cd
+					,sales_pro_seq
+					,sales_reg_date
+					,small_classifi
+	
+			)
+		VALUES
+		(
+			#{client_cd}
+			,#{goal_amt }
+			,#{large_classifi }
+			,#{loginID }
+			,#{manufacturer }
+			,#{memo }
+			,#{product_cd }
+			,#{sales_pro_seq }
+			,#{sales_reg_date }
+			,#{small_classifi}
+
+
+		     )		
+	</insert>
+	
+	<!-- 단건수정 -->
+	<update id="updatePlanList" >
+
+		UPDATE tb_sales_pro 
+		
+		SET  client_cd = #{client_cd}
+				,goal_amt = #{goal_amt}
+				,large_classifi = #{large_classifi}
+				,loginID = #{loginID}
+				,manufacturer = #{manufacturer}
+				,memo = #{memo}
+				,product_cd = #{product_cd}
+				,sales_pro_seq = #{sales_pro_seq}
+				,sales_reg_date = #{sales_reg_date}
+				,small_classifi = #{small_classifi}
+		       ,sales_pro_seq = #{sales_pro_seq}
+		       
+		       
+
+		WHERE  sales_pro_seq = #{sales_pro_seq}
+
+	</update>
+	
+	<!-- 단건삭제 -->
+	<delete id="deletePlanList">
+		DELETE FROM tb_sales_pro 
+		WHERE  sales_pro_seq = #{sales_pro_seq}
+
+	</delete>
+	
+	
+	
+</mapper>

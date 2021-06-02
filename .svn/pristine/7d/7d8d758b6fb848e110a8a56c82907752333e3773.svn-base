@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.sales.dao.ImmRevenueDao">
+<!-- <![CDATA[>]]> 사용 -->
+	
+	<!-- 사용자 기간 입력
+		월별 매출,매출원가,매출총이익,영업비영,영업이익,영업이익률 조회 및 시각화-->
+	<select id="listMSalesUI" resultType="kr.happyjob.study.sales.model.SalesModel">
+	
+		set @margin=0;  
+		set @sales_profit=0;
+		set @salesProfit_rate=0; 
+		select order_date
+		       ,order_num 
+		       ,sum_sales/100000 as sum_sales
+		       ,sum_cost/100000 as sum_cost 
+		       ,(@margin:=sum_sales-sum_cost)/100000  as margin
+		       ,sales_cost/100000 as sales_cost 
+		       ,(@sales_profit:=@margin-sales_cost)/100000 as sales_profit 
+		       ,ifnull((@salesProfit_rate:=round(@sales_profit/sum_sales*100,2)),0) as salesProfit_rate 
+		  from (
+		        select date_format(sl.occur_date,'%Y-%m') as order_date  
+		               ,count(case when acc.detail_account_cd in ('102','201') then 1 end) as order_num 
+		               ,ifnull(sum(case when acc.detail_account_cd in('102','201') then sl.amt end),0) as sum_sales 
+		               ,ifnull(sum(case when acc.detail_account_cd='101' then sl.amt end),0) as sum_cost 
+		               ,ifnull(sum(case when acc.account_cd='E500' then sl.amt end),0) as sales_cost 
+		          from tb_acc_slip sl
+		               join tb_account acc
+		                         on sl.account_cd = acc.account_cd
+		                         and sl.detail_account_cd = acc.detail_account_cd
+		         where date_format(sl.occur_date,'%Y-%m') between #{fromDate} and #{toDate}
+		         group by date_format(sl.occur_date,'%Y-%m')
+		        ) dsum
+
+					
+	
+	</select>
+
+	
+	
+	
+
+	
+</mapper>

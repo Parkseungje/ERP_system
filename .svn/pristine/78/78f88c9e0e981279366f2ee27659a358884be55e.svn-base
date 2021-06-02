@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.sales.dao.IddRevenueDao">
+<!-- <![CDATA[>]]> 사용 -->
+
+	<!-- 회계전표 목록 총 갯수 조회 -->	
+	<select id="countListddRevenue" resultType="int">
+		select count(*) as totalCount
+		  from tb_acc_slip sl
+		       left join tb_account acc
+		       			 	on sl.account_cd = acc.account_cd
+		       			 	and sl.detail_account_cd = acc.detail_account_cd
+	</select>
+	
+	<!-- 일별매출 거래처명,날짜별 조회 -->
+	<select id="listAccSlip" resultType="kr.happyjob.study.sales.model.AccSlipModel">
+		select sl.slip_no as slip_no
+		       ,date_format(sl.occur_date,'%Y-%m-%d') as occur_date
+		       ,sl.order_cd as order_cd
+		       ,sl.client_cd as client_cd
+		       ,(case
+			          when sl.account_cd='A100'
+			          and sl.detail_account_cd='101'
+			          then spl.supply_nm
+			          
+			          when sl.account_cd='A100'
+			          and sl.detail_account_cd!='101'
+			          then onl.client_nm
+			          
+			          when sl.account_cd='B200'
+			          then oe.client_nm
+			          
+			          when sl.account_cd not in ('A100', 'B200')
+			          then ''
+		         end) as client_nm
+		       ,(case
+			          when sl.account_cd='A100'
+			          and sl.detail_account_cd='101'
+			          then spl.direct_nm
+			          
+			          when sl.account_cd='A100'
+			          and sl.detail_account_cd!='101'
+			          then ''
+			          
+			          when sl.account_cd='B200'
+			          then oe.direct_nm
+			          
+			          when sl.account_cd not in ('A100', 'B200')
+			          then dv.direct_nm
+		         end) as direct_nm
+		       ,sl.account_cd as account_cd
+		       ,ac.account_nm as account_nm
+		       ,sl.detail_account_cd as detail_account_cd
+		       ,ac.detail_account_nm as detail_account_nm
+		       ,if(sl.amt<![CDATA[>]]>0 and ac.account_type=1,sl.amt,'') as rev_amt
+		       ,if(sl.amt<![CDATA[<]]>0 or ac.account_type=2,ABS(sl.amt),'') as exp_amt
+		       ,ac.account_type_nm accout_type_nm
+		  from tb_acc_slip sl
+		       left join (
+		                  select acc.account_cd
+		                         ,acc.detail_account_cd
+		                         ,acc.detail_account_nm
+		                         ,acc.use_yn
+		                         ,dc.detail_name as account_nm
+		                         ,acc.account_type
+		                         ,(select dc.detail_name
+		                             from tb_detail_code dc
+		                            where dc.group_code='REVEXPcd'
+		                                  and dc.detail_code = acc.account_type
+		                           ) as account_type_nm
+		                    from tb_account acc
+		                         left join tb_detail_code dc
+		                                   on (dc.detail_code = acc.account_cd
+		                                   and dc.group_code = 'ACCcd')
+		       
+		                ) ac
+		                  on sl.account_cd = ac.account_cd
+		                  and sl.detail_account_cd = ac.detail_account_cd
+		       left join (
+		                  select ri.receive_num
+		                         ,ri.loginID
+		                         ,ri.deposit_yn
+		                         ,ri.client_cd
+		                         ,ec.client_nm
+		                         ,(select ui.name
+		                             from tb_userinfo ui
+		                            where ui.loginID = ri.loginID
+		                           ) as direct_nm
+		                    from tb_receive_info ri
+		                         left join tb_erp_client ec
+		                                   on ri.client_cd = ec.client_cd
+		                ) oe 
+		                  on sl.order_cd = oe.receive_num
+		       left join (
+		                  select o.order_cd
+		                         ,o.loginID
+		                         ,o.offline
+		                         ,o.deposit_yn
+		                         ,(select ui.name
+		                             from tb_userinfo ui
+		                            where ui.loginID = o.loginID
+		                           ) as client_nm
+		                    from tb_order o
+		                  ) onl  
+		                    on sl.order_cd = onl.order_cd
+				left join (
+		                  select pr.purch_list_no
+		                         ,pr.order_cd
+		                         ,pr.supply_cd
+		                         ,pr.scm_id
+		                         ,pr.purch_mng_id
+		                         ,pr.approve_id
+		                         ,(select ui.name
+		                             from tb_userinfo ui
+		                            where ui.loginID = pr.scm_id
+		                           ) as direct_nm
+		                         ,ss.supply_nm as supply_nm
+		                    from tb_scm_purchase_list pr
+		                         left join tb_scm_supply ss
+		                                   on pr.supply_cd = ss.supply_cd
+		                  ) spl
+		                    on sl.order_cd = spl.order_cd
+		       left join (
+		                  select di.dv_no
+		                         ,di.loginID
+		                         ,di.account_cd
+		                         ,di.detail_account_cd
+		                         ,dv_amt
+		                         ,dv_app_yn
+		                         ,acc_name
+		                         ,(select ui.name
+		                             from tb_userinfo ui
+		                            where ui.loginID = di.loginID
+		                           ) as direct_nm
+		                    from tb_dv_info di
+		                  ) dv 
+		                    on sl.order_cd = dv.dv_no
+      
+
+		order by sl.slip_no desc
+		   LIMIT #{pageIndex}, #{pageSize}
+ 
+	</select>	
+	
+	<!-- 일별매출,지출 거래처명,날짜별 조회 -->
+	<select id="listddAmtSum" resultType="kr.happyjob.study.sales.model.AccSlipModel">
+	select sum(case when ac.account_type=1 then sl.amt end) as 'rev_total'
+       ,sum(case when ac.account_type=2 then sl.amt end) as 'exp_total'
+       ,sum(case when ac.account_type=1 and oe.deposit_yn='n' or onl.deposit_yn='n' then sl.amt end) as 'ar_total'
+  from tb_acc_slip sl
+       left join (
+                  select acc.account_cd
+                         ,acc.detail_account_cd
+                         ,acc.account_type
+                    from tb_account acc
+                         left join tb_detail_code dc
+                                   on (dc.detail_code = acc.account_cd
+                                   and dc.group_code = 'ACCcd')
+       
+                ) ac 
+                  on sl.account_cd = ac.account_cd
+                  and sl.detail_account_cd = ac.detail_account_cd
+       left join (
+                  select ri.receive_num
+                         ,ri.deposit_yn
+                    from tb_receive_info ri
+                         left join tb_erp_client ec
+                                   on ri.client_cd = ec.client_cd
+                ) oe  
+                  on sl.order_cd = oe.receive_num
+       left join (
+                  select o.order_cd
+                         ,o.deposit_yn
+                    from tb_order o
+                  ) onl  
+                    on sl.order_cd = onl.order_cd
+ where sl.detail_account_cd not in('103', '104','202','203');
+	
+	</select>
+	
+	
+	
+	
+
+	
+</mapper>

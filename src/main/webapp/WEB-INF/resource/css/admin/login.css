@@ -1,0 +1,160 @@
+@charset "utf-8";
+/*  body {
+	background-color : #acdcee;
+}  */
+
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: 'Alata', sans-serif;
+}
+
+.shadow{
+    -webkit-box-shadow: 27px 43px 43px -26px rgba(89,89,89,0.39);
+    -moz-box-shadow: 27px 43px 43px -26px rgba(89,89,89,0.39);
+    box-shadow: 27px 43px 43px -26px rgba(89,89,89,0.39);
+}
+p.logo	{text-align: center;}
+#background_board  {
+    width: 100vw;
+    height: 100vh;
+    background: #eff0f2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+	/* background: url(/images/admin/login/login2.png) no-repeat; */
+}
+
+
+.login_form {
+	 background:#f5f5f5 ;
+    width: 1302px;
+    height: 650px;
+    display: flex;
+    flex-direction: row;
+    box-shadow: 10px black;
+    border-radius: 10px;
+}
+
+.login-form-right-side{
+    width: 50%; 
+    border-radius: 10px 0px 0px 10px;
+    padding:75px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    background-image: 
+  radial-gradient(ellipse farthest-corner at 0 140%, #5d9dff 0%, #2178ff 70%, #3585ff 70%);
+}
+.login-form-right-side h1{
+    color: white;
+    width:100%;
+    text-align: right;
+    opacity: 0.9;
+    font-size:14px;
+
+}
+.login-form-right-side p{
+	color: white;
+    padding-top: 50px;
+    font-size:16px;
+    text-align: left;
+    opacity: 0.9;
+}
+
+
+.login-form-left-side{
+    width: 50%;
+    border-radius: 0px 10px 10px 0px;
+    display: flex;
+
+    flex-direction: column;
+    align-items: center;
+    padding:40px;
+    background: rgb(255,255,255);
+background: linear-gradient(287deg, rgba(255,255,255,1) 0%, rgba(243,244,244,1) 0%, rgba(255,255,255,1) 100%);
+}
+
+.login-form-left-side fieldset{
+	position: relative;
+	top : 25%
+}
+ .layerPosition{
+	position:absolute !important;
+	top : 145px !important;
+}
+@media screen and(min-width:768px){
+	.layerTest :before {
+	display :absolute;
+	vertical-allign : center;
+	top :145px;
+	}
+}
+
+.login_form .id #EMP_ID, .login_form .pw #EMP_PWD {   
+    width: 235px;
+    height: 40px;
+    line-height:39px;    
+    border:0px;
+    color:#5c6371;
+    background: #e5e9f2;
+    border-radius: 10px;
+    appearance: textfield;
+	padding: 0 15px;
+}
+
+.login_form .id label, .login_form .pw label {
+    display:inline-block;
+    width:70px;
+    height:39px;
+    line-height:39px;
+    vertical-align: middle;
+    font-family: 'NanumBarunGothic';
+    font-size: 15px;
+} 
+
+.login_form p.pw{margin-top:12px;}
+
+.login_form .member_info	 {
+	width:600px;
+	position: relative;
+    top: 10px;
+    right: 44px;
+}
+
+
+a.btn_login {
+	position: absolute;
+ 	top: 155px; 
+	width: 325px;
+	height: 52px;
+	line-height: 52px;
+	background: #37ade4;
+	color: #fff;
+	text-align: center;
+	font-size: 24px;
+	left: 150px;
+	border-radius: 5rem;
+    letter-spacing: .1rem;
+	
+}
+
+a.btn_log {
+	margin: 0 5px;
+}
+
+p.copy {
+	width: 442px;
+	margin: 20px auto 0;
+}
+
+p.copy span {
+	float: right;
+}
+
+.dashboard>ul>li .col>dl>dd {
+	margin-left: 150px;
+}

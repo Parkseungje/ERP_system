@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.sample.dao.SampleComnCodDao">
+
+   <!-- 그룹코드 목록 조회 -->
+   <select id="gouppcodelist" resultType="kr.happyjob.study.system.model.ComnGrpCodModel">
+      /*kr.happyjob.study.sample.dao.SampleComnCodDao.gouppcodelist*/      
+      select group_code as grp_cod
+               , group_name as grp_cod_nm
+               , note as grp_cod_eplti
+               , use_yn as use_poa
+               , DATE_FORMAT( reg_date , '%Y-%m-%d' ) as reg_date
+        from tb_group_code
+      <where>
+           <if test="(sgroupinput != null) and (!sgroupinput.equals(''))">
+            <choose>
+               <when
+                  test="searchgrouptype eq 'grp_cod'.toString()">
+                  and group_code Like CONCAT('%', #{sgroupinput}, '%')
+               </when>
+               <when
+                  test="searchgrouptype eq 'grp_cod_nm'.toString()">
+                  and group_name LIKE CONCAT('%', #{sgroupinput}, '%')
+               </when>
+               <otherwise>
+                  and ( 
+                            group_code Like CONCAT('%', #{sgroupinput}, '%') 
+                        or group_name LIKE CONCAT('%', #{sgroupinput}, '%')
+                        )
+               </otherwise>
+            </choose>
+         </if>  
+       </where> 
+       ORDER BY reg_date DESC
+       LIMIT #{pageIndex}, #{pageSize}
+   </select>
+   
+   <!-- 그룹코드 목록 총 갯수 조회 -->
+   <select id="gouppcodecount" resultType="int">
+      /*kr.happyjob.study.sample.dao.SampleComnCodDao.gouppcodecount*/      
+      select count(*)
+        from tb_group_code
+       <where>
+           <if test="(sgroupinput != null) and (!sgroupinput.equals(''))">
+            <choose>
+               <when
+                  test="searchgrouptype eq 'grp_cod'.toString()">
+                  and group_code Like CONCAT('%', #{sgroupinput}, '%')
+               </when>
+               <when
+                  test="searchgrouptype eq 'grp_cod_nm'.toString()">
+                  and group_name LIKE CONCAT('%', #{sgroupinput}, '%')
+               </when>
+               <otherwise>
+                  and ( 
+                            group_code Like CONCAT('%', #{sgroupinput}, '%') 
+                        or group_name LIKE CONCAT('%', #{sgroupinput}, '%')
+                        )
+               </otherwise>
+            </choose>
+         </if>  
+       </where> 
+   </select>
+   
+   <!-- 그룹코드 목록 조회 -->
+   <select id="detailcodelist" resultType="kr.happyjob.study.system.model.ComnDtlCodModel">
+      /*kr.happyjob.study.sample.dao.SampleComnCodDao.detailcodelist*/      
+      select group_code as grp_cod
+               , detail_code as dtl_cod
+               , detail_name as dtl_cod_nm
+               , note as dtl_cod_eplt
+               , use_yn as use_poa
+        from tb_detail_code
+      where group_code =  #{grpcd}
+      <where> 
+           <if test="(sname != null) and (!sname.equals(''))">
+            <choose>
+               <when
+                  test="searchKey eq 'dtl_cod'.toString()">
+                  and detail_code Like CONCAT('%', #{sname}, '%')
+               </when>
+               <when
+                  test="searchKey eq 'dtl_cod_nm'.toString()">
+                  and detail_name LIKE CONCAT('%', #{sname}, '%')
+               </when>
+               <otherwise>
+                  and ( 
+                            detail_code Like CONCAT('%', #{sname}, '%')
+                        or detail_name LIKE CONCAT('%', #{sname}, '%')
+                        )
+               </otherwise>
+            </choose>
+         </if>  
+       </where> 
+       ORDER BY reg_date DESC
+       LIMIT #{pageIndex}, #{pageSize}
+   </select>
+   
+   
+   
+   <!-- 상세코드 목록 총 갯수 조회 -->
+   <select id="detailcodecount" resultType="int">
+      /*kr.happyjob.study.sample.dao.SampleComnCodDao.detailcodecount*/      
+      select count(*)
+        from tb_detail_code
+      where group_code =  #{grpcd}
+      <where> 
+           <if test="(sname != null) and (!sname.equals(''))">
+            <choose>
+               <when
+                  test="searchKey eq 'dtl_cod'.toString()">
+                  and detail_code Like CONCAT('%', #{sname}, '%')
+               </when>
+               <when
+                  test="searchKey eq 'dtl_cod_nm'.toString()">
+                  and detail_name LIKE CONCAT('%', #{sname}, '%')
+               </when>
+               <otherwise>
+                  and ( 
+                            detail_code Like CONCAT('%', #{sname}, '%')
+                        or detail_name LIKE CONCAT('%', #{sname}, '%')
+                        )
+               </otherwise>
+            </choose>
+         </if>  
+       </where> 
+   </select>
+   
+   
+   <select id="selectgroupcode" resultType="kr.happyjob.study.system.model.ComnGrpCodModel">
+      /*kr.happyjob.study.sample.dao.SampleComnCodDao.gouppcodelist*/      
+      select gc.group_code as grp_cod
+               , gc.group_name as grp_cod_nm
+               , gc.note as grp_cod_eplti
+               , gc.use_yn as use_poa
+               , ( select count(*) from  tb_detail_code dc where dc.group_code = gc.group_code  )  as detailcnt    
+        from tb_group_code gc
+       where  gc.group_code = #{grp_cod}
+   </select>
+   
+   <insert  id="insertgroupcode" >
+         insert into tb_group_code
+                       (
+                          group_code 
+                         , group_name 
+                         , note 
+                          , use_yn                        
+                       ) values (
+                             #{grp_cod}
+                            ,#{grp_cod_nm}
+                            ,#{grp_cod_eplti}
+                            ,#{grp_use_poa}
+                       )
+   </insert>
+   
+   <update  id="updategroupcode" >
+          update tb_group_code
+               set  group_name = #{grp_cod_nm}
+                  , note = #{grp_cod_eplti}
+                  , use_yn = #{grp_use_poa}
+          where group_code = #{grp_cod}
+   </update>
+      
+   <delete  id="deletegroupcode" >
+          delete from tb_group_code
+          where group_code = #{grp_cod}
+   </delete>      
+      
+      
+      
+      
+   <select id="selectdetailcode" resultType="kr.happyjob.study.system.model.ComnDtlCodModel">
+      /*kr.happyjob.study.sample.dao.SampleComnCodDao.selectdetailcode*/      
+      select group_code as grp_cod
+               , detail_code as dtl_cod
+               , detail_name as dtl_cod_nm
+               , note as dtl_cod_eplti
+               , use_yn as use_poa
+        from tb_detail_code 
+       where  group_code = #{grp_cod}
+          and detail_code = #{detail_cod}
+   </select>
+   
+   
+
+   
+   <insert  id="insertdetailcode" >
+         insert into tb_detail_code
+                       (
+                          group_code
+                         , detail_code
+                         , detail_name
+                         , note
+                         , use_yn
+                         , regId
+                         , reg_date
+                         , updateId
+                         , update_date                    
+                       ) values (
+                             #{grp_cod}
+                            ,#{dtl_cod}
+                            ,#{dtl_cod_nm}
+                            ,#{dtl_cod_eplti}
+                            ,#{dtl_use_poa}
+                            ,#{loginId}
+                            ,now()
+                            ,#{loginId}
+                            ,now()      
+                       )
+   </insert>
+          
+   <update  id="updatedetailcode" >
+          update tb_detail_code
+               set  detail_name = #{dtl_cod_nm}
+                  , note = #{dtl_cod_eplti}
+                  , use_yn = #{dtl_use_poa}
+          where group_code = #{grp_cod}
+             and detail_code = #{dtl_cod}
+   </update>
+   
+   <delete  id="deletedetailcode">
+          delete from tb_detail_code
+          where group_code = #{grp_cod}
+             and detail_code = #{dtl_cod}
+   </delete>      
+   
+</mapper>

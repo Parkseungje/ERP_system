@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.employee.dao.BmtaDao">
+
+	<select id="taapprove" resultType="kr.happyjob.study.employee.model.BmtaModel">
+select ee.ta_no, 
+       ee.loginID, 
+       ee.name, 
+       left(ee.start_date, 10) as start_date,
+       left(ee.end_date, 10) as end_date,
+       left(ee.ta_reg_date, 10) as ta_reg_date,
+       ee.tel, 
+       ee.reason_hol, 
+       ee.can_reason, 
+       ee.ta_yn, 
+       ee.kind_hol, 
+       ee.dept_name, 
+       uif.name as app_nm from (
+                                select dd.ta_no, 
+                                       dd.loginID, 
+                                       dd.name, 
+                                       dd.start_date, 
+                                       dd.end_date, 
+                                       dd.ta_reg_date, 
+                                       dd.ta_app_nm, 
+                                       dd.tel, 
+                                       dd.reason_hol, 
+                                       dd.can_reason, 
+                                       dd.ta_yn, 
+                                       dd.kind_hol, 
+                                       dp.dept_name
+                                       from (
+                                                select cc.ta_no, 
+                                                       cc.loginID, 
+                                                       cc.name, 
+                                                       cc.start_date, 
+                                                       cc.end_date, 
+                                                       cc.ta_reg_date, 
+                                                       cc.ta_app_nm, 
+                                                       cc.tel, 
+                                                       cc.reason_hol, 
+                                                       cc.can_reason, 
+                                                       cc.ta_yn, 
+                                                       cc.kind_hol, 
+                                                       em.dept_cd from (
+                                                                        select bb.ta_no, 
+                                                                               bb.loginID, 
+                                                                               bb.name, 
+                                                                               bb.start_date, 
+                                                                               bb.end_date, 
+                                                                               bb.ta_reg_date, 
+                                                                               bb.ta_app_nm, 
+                                                                               bb.tel,
+                                                                               bb.reason_hol,
+                                                                               bb.can_reason,
+                                                                               dc.detail_name as ta_yn, 
+                                                                               bb.detail_name as kind_hol
+                                                                               from (
+                                                                                     select aa.ta_no, 
+                                                                                            aa.loginID, 
+                                                                                            aa.name, 
+                                                                                            aa.start_date, 
+                                                                                            aa.end_date, 
+                                                                                            aa.ta_reg_date, 
+                                                                                            aa.ta_app_nm, 
+                                                                                            aa.ta_yn, 
+                                                                                            aa.tel,
+                                                                                            aa.reason_hol,
+                                                                                            aa.can_reason,
+                                                                                            dc.detail_name 
+                                                                                      from(
+                                                                                           select tm.ta_no, 
+                                                                                                  tm.loginID, 
+                                                                                                  ui.name, 
+                                                                                                  tm.kind_hol, 
+                                                                                                  tm.start_date, 
+                                                                                                  tm.end_date, 
+                                                                                                  tm.ta_reg_date, 
+                                                                                                  tm.ta_app_nm, 
+                                                                                                  tm.ta_yn,
+                                                                                                  tm.reason_hol,
+                                                                                                  tm.can_reason,
+                                                                                                  ui.tel
+                                                                                           from tb_ta_mgt tm 
+                                                                                           left join tb_userinfo ui on tm.loginID = ui.loginID
+                                                                                          ) aa left join tb_detail_code dc on aa.kind_hol = dc.detail_code 
+                                                                                               where dc.group_code='VACcd'
+                                                                                    ) bb left join tb_detail_code dc on bb.ta_yn=dc.detail_code 
+                                                                                         where dc.group_code='Okcd'
+                                                                        ) cc left join tb_emp em on cc.loginID=em.loginID
+                                            ) dd left join tb_dept dp on dd.dept_cd=dp.dept_cd
+                                ) ee left join tb_userinfo uif on ee.ta_app_nm=uif.loginID    
+	   								   
+	   							
+	   	<where>
+	   		<if test="(start_date != null) and (!start_date.equals(''))">
+	   			and DATE_FORMAT(ee.ta_reg_date,'%Y-%m-%d')<![CDATA[>=]]>#{start_date}
+	   		</if>
+	   		<if test="(end_date != null) and (!end_date.equals(''))">
+	   			and DATE_FORMAT(ee.ta_reg_date,'%Y-%m-%d')<![CDATA[<=]]>#{end_date}
+	   		</if>
+	   		<if test="(loginID != null) and (!loginID.equals(''))">
+	   			and ee.loginID = #{loginID}
+	   		</if>
+	   		<if test="(name != null) and (!name.equals(''))">
+	   			and ee.name = #{name}
+	   		</if>
+	   		<if test="(ta_yn != null) and (!ta_yn.equals(''))">
+	   			and ee.ta_yn = #{ta_yn}
+	   		</if>
+	   	</where>
+	   	LIMIT #{pageIndex}, #{pageSize}
+	</select>
+
+	<select id="taapprovecnt" resultType="int">
+          select count(*) from (
+                                select dd.ta_no, 
+                                       dd.loginID, 
+                                       dd.name, 
+                                       dd.start_date, 
+                                       dd.end_date, 
+                                       dd.ta_reg_date, 
+                                       dd.ta_app_nm, 
+                                       dd.tel, 
+                                       dd.reason_hol, 
+                                       dd.can_reason, 
+                                       dd.ta_yn, 
+                                       dd.kind_hol, 
+                                       dp.dept_name
+                                       from (
+                                                select cc.ta_no, 
+                                                       cc.loginID, 
+                                                       cc.name, 
+                                                       cc.start_date, 
+                                                       cc.end_date, 
+                                                       cc.ta_reg_date, 
+                                                       cc.ta_app_nm, 
+                                                       cc.tel, 
+                                                       cc.reason_hol, 
+                                                       cc.can_reason, 
+                                                       cc.ta_yn, 
+                                                       cc.kind_hol, 
+                                                       em.dept_cd from (
+                                                                        select bb.ta_no, 
+                                                                               bb.loginID, 
+                                                                               bb.name, 
+                                                                               bb.start_date, 
+                                                                               bb.end_date, 
+                                                                               bb.ta_reg_date, 
+                                                                               bb.ta_app_nm, 
+                                                                               bb.tel,
+                                                                               bb.reason_hol,
+                                                                               bb.can_reason,
+                                                                               dc.detail_name as ta_yn, 
+                                                                               bb.detail_name as kind_hol
+                                                                               from (
+                                                                                     select aa.ta_no, 
+                                                                                            aa.loginID, 
+                                                                                            aa.name, 
+                                                                                            aa.start_date, 
+                                                                                            aa.end_date, 
+                                                                                            aa.ta_reg_date, 
+                                                                                            aa.ta_app_nm, 
+                                                                                            aa.ta_yn, 
+                                                                                            aa.tel,
+                                                                                            aa.reason_hol,
+                                                                                            aa.can_reason,
+                                                                                            dc.detail_name 
+                                                                                      from(
+                                                                                           select tm.ta_no, 
+                                                                                                  tm.loginID, 
+                                                                                                  ui.name, 
+                                                                                                  tm.kind_hol, 
+                                                                                                  tm.start_date, 
+                                                                                                  tm.end_date, 
+                                                                                                  tm.ta_reg_date, 
+                                                                                                  tm.ta_app_nm, 
+                                                                                                  tm.ta_yn,
+                                                                                                  tm.reason_hol,
+                                                                                                  tm.can_reason,
+                                                                                                  ui.tel
+                                                                                           from tb_ta_mgt tm 
+                                                                                           left join tb_userinfo ui on tm.loginID = ui.loginID
+                                                                                          ) aa left join tb_detail_code dc on aa.kind_hol = dc.detail_code 
+                                                                                               where dc.group_code='VACcd'
+                                                                                    ) bb left join tb_detail_code dc on bb.ta_yn=dc.detail_code 
+                                                                                         where dc.group_code='Okcd'
+                                                                        ) cc left join tb_emp em on cc.loginID=em.loginID
+                                            ) dd left join tb_dept dp on dd.dept_cd=dp.dept_cd
+                                ) ee left join tb_userinfo uif on ee.ta_app_nm=uif.loginID    
+	   								   
+	   							
+	   	<where>
+	   		<if test="(start_date != null) and (!start_date.equals(''))">
+	   			and DATE_FORMAT(ee.ta_reg_date,'%Y-%m-%d')<![CDATA[>=]]>#{start_date}
+	   		</if>
+	   		<if test="(end_date != null) and (!end_date.equals(''))">
+	   			and DATE_FORMAT(ee.ta_reg_date,'%Y-%m-%d')<![CDATA[<=]]>#{end_date}
+	   		</if>
+	   		<if test="(loginID != null) and (!loginID.equals(''))">
+	   			and ee.loginID = #{loginID}
+	   		</if>
+	   		<if test="(name != null) and (!name.equals(''))">
+	   			and ee.name = #{name}
+	   		</if>
+	   		<if test="(ta_yn != null) and (!ta_yn.equals(''))">
+	   			and ee.ta_yn = #{ta_yn}
+	   		</if>
+	   	</where>
+	</select>
+	
+	<select id="taapproveUpdateSelect" resultType="kr.happyjob.study.employee.model.BmtaModel">
+select ee.ta_no, 
+       ee.loginID, 
+       ee.name, 
+       left(ee.start_date, 10) as start_date,
+       left(ee.end_date, 10) as end_date,
+       left(ee.ta_reg_date, 10) as ta_reg_date, 
+       ee.tel, 
+       ee.reason_hol, 
+       ee.can_reason, 
+       ee.ta_yn, 
+       ee.kind_hol, 
+       ee.dept_name 
+                         from (
+                                select dd.ta_no, 
+                                       dd.loginID, 
+                                       dd.name, 
+                                       dd.start_date, 
+                                       dd.end_date, 
+                                       dd.ta_reg_date, 
+                                       dd.ta_app_nm, 
+                                       dd.tel, 
+                                       dd.reason_hol, 
+                                       dd.can_reason, 
+                                       dd.ta_yn, 
+                                       dd.kind_hol, 
+                                       dp.dept_name
+                                       from (
+                                                select cc.ta_no, 
+                                                       cc.loginID, 
+                                                       cc.name, 
+                                                       cc.start_date, 
+                                                       cc.end_date, 
+                                                       cc.ta_reg_date, 
+                                                       cc.ta_app_nm, 
+                                                       cc.tel, 
+                                                       cc.reason_hol, 
+                                                       cc.can_reason, 
+                                                       cc.ta_yn, 
+                                                       cc.kind_hol, 
+                                                       em.dept_cd from (
+                                                                        select bb.ta_no, 
+                                                                               bb.loginID, 
+                                                                               bb.name, 
+                                                                               bb.start_date, 
+                                                                               bb.end_date, 
+                                                                               bb.ta_reg_date, 
+                                                                               bb.ta_app_nm, 
+                                                                               bb.tel,
+                                                                               bb.reason_hol,
+                                                                               bb.can_reason,
+                                                                               dc.detail_name as ta_yn, 
+                                                                               bb.detail_name as kind_hol
+                                                                               from (
+                                                                                     select aa.ta_no, 
+                                                                                            aa.loginID, 
+                                                                                            aa.name, 
+                                                                                            aa.start_date, 
+                                                                                            aa.end_date, 
+                                                                                            aa.ta_reg_date, 
+                                                                                            aa.ta_app_nm, 
+                                                                                            aa.ta_yn, 
+                                                                                            aa.tel,
+                                                                                            aa.reason_hol,
+                                                                                            aa.can_reason,
+                                                                                            dc.detail_name 
+                                                                                      from(
+                                                                                           select tm.ta_no, 
+                                                                                                  tm.loginID, 
+                                                                                                  ui.name, 
+                                                                                                  tm.kind_hol, 
+                                                                                                  tm.start_date, 
+                                                                                                  tm.end_date, 
+                                                                                                  tm.ta_reg_date, 
+                                                                                                  tm.ta_app_nm, 
+                                                                                                  tm.ta_yn,
+                                                                                                  tm.reason_hol,
+                                                                                                  tm.can_reason,
+                                                                                                  ui.tel
+                                                                                           from tb_ta_mgt tm 
+                                                                                           left join tb_userinfo ui on tm.loginID = ui.loginID
+                                                                                            where tm.ta_no=#{ta_no}
+                                                                                          ) aa left join tb_detail_code dc on aa.kind_hol = dc.detail_code 
+                                                                                               where dc.group_code='VACcd'
+                                                                                    ) bb left join tb_detail_code dc on bb.ta_yn=dc.detail_code 
+                                                                                         where dc.group_code='Okcd'
+                                                                        ) cc left join tb_emp em on cc.loginID=em.loginID
+                                            ) dd left join tb_dept dp on dd.dept_cd=dp.dept_cd
+                                                  
+                                ) ee left join tb_userinfo uif on ee.ta_app_nm=uif.loginID
+	   	<where>
+	   		<if test="(ta_no != null) and (!ta_no.equals(''))">
+	   			and ee.ta_no = #{ta_no}
+	   		</if>
+	   	</where>
+	</select>
+	
+	<update id="taapproveUpdate">
+		UPDATE tb_ta_mgt
+		   SET ta_yn = #{dv_radio}, 
+			   can_reason = #{can_reason}	   
+	    where ta_no = #{ta_no}	
+	</update>
+	
+</mapper>
+

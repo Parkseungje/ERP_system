@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.system.dao.NoticeDao">
+        
+   <!-- 공지사항 목록 조회 원본 -->
+   <select id = "noticenewList" resultType = "kr.happyjob.study.system.model.NoticeNewModel">
+      SELECT nt.no
+          ,  nt.title
+          ,  ui.name    
+          ,  nt.`date`    
+      FROM tb_notice nt
+      INNER JOIN tb_userinfo ui ON nt.loginID = ui.loginID
+      WHERE nt.delete_yn IS NULL
+         <if test="(title != null) and (!title.equals(''))">
+             and nt.title like CONCAT('%', #{title}, '%')
+         </if>
+         <if test="(contents != null) and (!contents.equals(''))">
+             and nt.contents like CONCAT('%', #{contents}, '%')
+         </if>
+         <if test="(from_date != null) and (!from_date.equals(''))">
+             and nt.`date`  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         </if>         
+         <if test="(to_date != null) and (!to_date.equals(''))">
+             and nt.`date`  <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         </if>
+         <if test="(userID != null) and (!userID.equals(''))">
+             and ui.name like CONCAT('%', #{userID}, '%')  
+         </if>  
+       ORDER BY nt.no DESC
+       LIMIT #{pageIndex}, #{pageSize}
+   </select>
+   
+    <select id = "noticenewCount" resultType = "int">
+      SELECT count(*)
+      FROM tb_notice nt
+      INNER JOIN tb_userinfo ui ON nt.loginID = ui.loginID
+      WHERE nt.delete_yn IS NULL
+         <if test ="(title != null) and (!title.equals(''))">
+             and nt.title like CONCAT('%', #{title}, '%')
+         </if>
+         <if test ="(contents != null) and (!contents.equals(''))">
+             and nt.contents like CONCAT('%', #{contents}, '%')
+         </if>
+         <if test ="(from_date != null) and (!from_date.equals(''))">
+             and nt.`date`  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         </if>         
+         <if test ="(to_date != null) and (!to_date.equals(''))">
+             and nt.`date`  <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         </if>
+         <if test ="(userID != null) and (!userID.equals(''))">
+             and ui.name like CONCAT('%', #{userID}, '%')  
+         </if>    
+
+   </select>  
+      
+   <!-- 공지사항 목록 총 갯수 조회 -->
+   <select id="noticenewCnt" resultType="int">
+      /*kr.kosmo.jobkorea.system.dao.NoticeDao.noticeNewCnt*/
+      SELECT COUNT(*)
+      FROM   tb_notice
+      <where>
+         <if test ="(title != null) and (!title.equals(''))">
+             and title  like CONCAT('%', #{title}, '%')
+         </if>
+         <if test ="(contents != null) and (!contents.equals(''))">
+             and contents like CONCAT('%', #{contents}, '%')
+         </if>
+         <if test ="(userID != null) and (!userID.equals(''))">
+             and name like CONCAT('%', #{userID}, '%')  
+         </if>
+         <if test ="(from_date != null) and (!from_date.equals(''))">
+             and `date`  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         </if>         
+         <if test ="(to_date != null) and (!to_date.equals(''))">
+             and `date`  <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         </if>      
+      </where>
+      ORDER BY no DESC
+   </select>   
+   
+   <!-- **** 공지사항 상세조회 **** -->
+   <select id="noticenewdetail" resultType="kr.happyjob.study.system.model.NoticeNewModel">
+    SELECT   nt.no
+          ,  nt.title
+          ,  nt.contents
+          ,  ui.name    
+      FROM tb_notice nt
+      INNER JOIN tb_userinfo ui ON nt.loginID = ui.loginID
+     WHERE nt.no = #{no} AND nt.delete_yn IS NULL
+   </select>
+   
+   <!-- **** 공지사항 삭제 **** -->
+   <update id="noticenewdelete">
+   
+    UPDATE tb_notice
+       SET delete_yn = 'y'
+     WHERE no = #{noticeNo}
+   
+   </update>
+</mapper>

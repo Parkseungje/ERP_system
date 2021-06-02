@@ -1,0 +1,420 @@
+.hidden {
+	display: none;
+}
+
+
+/* =========== roomInfoList =================*/
+/* room_searchbox */
+.room_searchbox {
+	position: relative;
+	display: block;
+	width: 100%;
+	margin-bottom: 2em;
+}
+.room_searchbox .Rserch_input {
+	width: 78%;
+	display: inline-block;
+}
+.room_searchbox .Rserch_input input {
+	width: 100%;
+	font-size : 1em;
+	padding : 0.3em;
+	border-radius: 0.3em;
+}
+
+.room_searchbox .Rserch_btn {
+	width: 10%;
+	display: inline-block;
+}
+.room_searchbox .Rserch_btn input {
+	width: 100%;
+	padding : 0.22em;
+}
+.room_searchbox .Room_register_btn {
+	width: 10%;
+	display: inline-block;
+}
+.room_searchbox .Room_register_btn input {
+	width: 100%;
+	padding : 0.22em;
+}
+/* /.room_searchbox */
+.roomTotal_listbox {
+	position: relative;
+	display: block;
+	width: 100%;
+}
+.roomTotal_listbox .roomList_box {
+	float: left;
+	position: relative;
+	width:33.5%;
+}
+.roomTotal_listbox .roomList_box button {
+	width : 100%;
+}
+.roomTotal_listbox .roomList_box .showItem_btn {
+	width : 100%;
+	background-color : white;
+	border : none;
+}
+.roomTotal_listbox .roomList_box .roomInfo_box {
+	width : 100%;
+	margin-top : 1em;
+}
+
+
+.roomTotal_listbox .roomList_box .roomInfo_box .roomInfo_pic {
+	width : 9.3em;
+	height: 7.2em;
+	border-radius: 0.3em;
+	float: left;
+	margin : 2em 1em 2em 0;
+}
+.roomTotal_listbox .roomList_box .roomInfo_box .roomInfo_pic img {
+	width : 8.5em;
+	height: 7em;
+	border-radius: 0.3em;
+}
+.roomTotal_listbox .roomList_box .roomInfo_box .roomInfo_context {
+	float: left;
+	margin : 2em 1em 2em 1em;
+	padding : 0.6em 0;
+}
+.roomTotal_listbox .roomList_box .roomInfo_box .roomInfo_context .roomInfo_tit {
+	font-size: 1.25em;
+	font-weight: 600;
+
+}
+.roomTotal_listbox .roomList_box .roomInfo_box .roomInfo_context .roomInfo_size {
+	margin: 0.35em 0;
+}
+.roomTotal_listbox .roomList_box .roomInfo_box .roomInfo_context .roomInfo_people {
+
+}
+.roomTotal_listbox .roomList_box .roomInfo_box .roomInfo_btnbox {
+	clear: both;
+	display: block;
+	position: relative;
+	text-align: center;
+}
+.roomTotal_listbox .roomList_box .roomInfo_box .roomInfo_btnbox .roomInfo_revise_btn {
+	display: inline-block;
+	width: 49%
+}
+.roomTotal_listbox .roomList_box .roomInfo_box .roomInfo_btnbox .roomInfo_revise_btn button {
+	width : 7em;
+	font-size: 1em;
+	padding: 0.5em 1em;
+	border-radius: 0.35em;
+}
+.roomTotal_listbox .roomList_box .roomInfo_box .roomInfo_btnbox .roomInfo_delete_btn {
+	display: inline-block;
+	width: 45%
+}
+.roomTotal_listbox .roomList_box .roomInfo_box .roomInfo_btnbox .roomInfo_delete_btn button {
+	width : 7em;
+	font-size: 1em;
+	padding: 0.5em 1em;
+	border-radius: 0.35em;
+}
+.roomTotal_listbox hr {
+	margin-top: 2em;
+}
+
+/* /.roomList_box */
+.roomTotal_listbox .itemList_box {
+	float: right;
+	position: relative;
+	width:65%;
+	border-left: 1px solid #A9A9A9;
+	text-align: center;
+}
+.roomTotal_listbox .itemList_box .itemList_titbox {
+	
+	font-size: 1.3em;
+	font-weight: 600;
+	padding : 1em;
+}
+.itemList_box .itemList_tablebox {
+	width: 100%;
+}
+.itemList_box .itemList_tablebox table {
+	width: 100%;
+	border-collapse: collapse;
+	margin : 0 0.3em; 
+	text-align: center;
+	
+}
+.itemList_box .itemList_tablebox table th {
+	background-color: #A9A9A9;
+	font-size: 1.1em;
+	font-weight: 600;
+	padding : 0.3em;
+}
+
+
+
+.itemList_box .itemList_tablebox table td {
+	border : 1px solid #DCDCDC;
+}
+.itemList_box .itemList_tablebox table td input{
+	border-style : none;
+	font-size : 1.1em;
+	padding : 0.22em;
+	text-align: center;
+	width : 88%;
+}
+.itemList_box .itemList_tablebox table td button {
+	padding : 0.15em 0.25em;
+}
+/* /.itemList_box */
+/* /.roomTotal_listbox */
+
+
+
+/* ==roomInfoList==*/
+
+
+
+/* =========== lectureList =================*/
+/* lecture_searchbox */
+.lecture_searchbox {
+	position: relative;
+	display: block;
+	width: 100%;
+	margin-top : 2em;
+}
+.lecture_searchbox .lecture_selectbox {
+	width: 13%;
+	display : inline-block;
+}
+.lecture_searchbox .lecture_selectbox select {
+	width :100%;
+	font-size: 1em;
+	padding : 0.4em;
+	text-align: center;
+}
+.lecture_searchbox .lecture_serch_input {
+	display : inline-block;
+	width: 84%;
+	margin-left: 0.5em;
+}
+.lecture_searchbox .lecture_serch_input input {
+	width : 100%;
+	font-size: 1em;
+	padding : 0.4em;
+}
+
+
+/* /.lecture_searchbox */
+.lecture_box {
+	position : relative;
+	display : block;
+	width: 100%;
+	margin-top: 5em;
+}
+.lecture_box .lecture_tit_box {
+	font-size: 1.2em;
+	font-weight: 600;
+	margin : 0.7em 0;
+}
+.lecture_box .lecture_listbox {
+	width: 100%;
+}
+.lecture_box .lecture_listbox table {
+	width: 100%;
+	border-collapse: collapse;
+	text-align: center;
+}
+.lecture_box .lecture_listbox table th {
+	background-color: #A9A9A9;
+	font-size: 1.1em;
+	font-weight: 600;
+	padding : 0.5em;
+}
+.lecture_box .lecture_listbox table td {
+	padding : 0.5em;
+	border-bottom: 0.5px solid #A9A9A9;
+}
+.lecture_box .lecturerInfor_box {
+	margin : 2em 15em;
+	text-align: left;
+	position: relative;
+}
+.lecture_box .lecturerInfor_box .lecturer_pic {
+	float : left;
+	border-radius: 50%;
+	width: 8em;
+	height: 8em;
+}
+.lecture_box .lecturerInfor_box .lecturer_pic img {
+	border-radius: 50%;
+	width: 8em;
+	height: 8em;
+}
+.lecture_box .lecturerInfor_box .lecturer_Info {
+	float : left;
+	margin : 1em;
+	font-size: 1.1em;
+}
+.lecture_box .lecturerInfor_box .lecturer_Info .lecturer_name {
+	font-size: 1.1em;
+	font-weight: 600;
+	padding : 0.2em;
+}
+.lecture_box .lecturerInfor_box .lecturer_Info .lecturer_id {
+	padding : 0.2em;
+}
+.lecture_box .lecturerInfor_box .lecturer_Info .lecturer_phone {
+	padding : 0.2em;
+}
+
+.lecture_box .student_list {
+	margin : 11.2em 2em 3em 15em;
+	text-align: center;
+}
+.lecture_box .student_list table {
+	clear : both;
+	
+	width : 77%;
+
+}
+.lecture_box .student_list table th {
+	background: #6495ED;
+}
+
+
+
+
+/* =========== SignUpForClass =================*/
+
+.lecturer_searchbox {
+	position : relative;
+	display : block;
+	width: 100%;
+	margin : 2em 0;
+}
+.lecturer_searchbox .lecturer_selectbox {
+	width: 10%;
+	display: inline-block;
+	
+}
+.lecturer_searchbox .lecturer_selectbox select {
+	width :100%;
+	font-size: 1em;
+	padding : 0.4em;
+	text-align: center;
+}
+.lecturer_searchbox .lecturer_serch_input {
+	display: inline-block;
+	width: 87%;
+	margin-left: 0.5em;
+}
+.lecturer_searchbox .lecturer_serch_input input {
+	width : 100%;
+	font-size: 1em;
+	padding : 0.4em;
+}
+
+/* /.lecturer_searchbox */
+
+.lecturer_box {
+	clear : both;
+	position : relative;
+	display : block;
+	width: 100%;
+	margin-top: 5em;
+}
+.lecturer_box .lecturer_tit_box {
+	font-size: 1.2em;
+	font-weight: 600;
+	margin : 0.7em 0;
+}
+.lecturer_box .lecturer_listbox {
+	width: 100%;
+	text-align: center;
+}
+.lecturer_box .lecturer_listbox table {
+	width: 100%;
+	border-collapse: collapse;
+	text-align: center;
+
+}
+.lecturer_box .lecturer_listbox table th {
+	background-color: #A9A9A9;
+	font-size: 1.1em;
+	font-weight: 600;
+	padding : 0.5em;
+}
+.lecturer_box .lecturer_listbox table td {
+	padding : 0.2em;
+	border-bottom: 0.5px solid #A9A9A9;
+}
+.lecturer_box .lecturer_listbox .simple_lecInfo {
+	position : relative;
+	width : 100%;
+	
+}
+.lecturer_box .lecturer_listbox .simple_lecInfo .index_num {
+	display: inline-block;
+	width : 4%;
+	text-align : left;
+	padding : 0 0 0 1.3em;
+}
+.lecturer_box .lecturer_listbox .simple_lecInfo .lec_name {
+	width : 30.9%;
+	display: inline-block;
+}
+.lecturer_box .lecturer_listbox .simple_lecInfo .t_name {
+	width : 30.9%;
+	display: inline-block;
+}
+.lecturer_box .lecturer_listbox  .simple_lecInfo .lec_enr {
+	width : 30.9%;
+	display: inline-block;
+}
+.lecturer_box .lecturer_listbox button {
+	padding : 0.3em 1em;
+	margin : -0.2em 0;'
+	border-radius: 0.3em;
+	background : #FFB6C1;
+	color : #FFFFFF;
+}
+.lecturer_box .lectureInfo_box {
+	text-align: left;
+	margin : 1.5em 2em;
+}
+.lecturer_box .lectureInfo_box span{
+	font-weight : 600;
+}
+.lecturer_box .lectureInfo_box .lecture_tit {
+	padding : 0.35em 0.2em;
+	font-size : 1.3em;
+	font-weight : 600;
+}
+.lecturer_box .lectureInfo_box .lecturer_name {
+	padding : 0.2em;
+}
+.lecturer_box .lectureInfo_box .lecture_date {
+	padding : 0.2em;
+}
+.lecturer_box .lectureInfo_box .lecture_aim {
+	padding : 0.2em;
+}
+.lecturer_box .lectureInfo_box .lecture_plan {
+	padding : 0.2em;
+}
+.lecturer_box .lectureInfo_box .lecture_cont {
+	padding : 0.2em;
+}
+.lecturer_box .lectureInfo_box .lecture_curriculum {
+	padding : 0.2em;
+}
+.lecturer_box .lectureInfo_box .lecture_curriculum span {
+	color : #0000CD;
+	}
+.lecturer_box .lectureInfo_box .lecture_curriculum a {
+	margin : 0.1em 0.5em;
+}	
+
+/* /.lecturer_box */

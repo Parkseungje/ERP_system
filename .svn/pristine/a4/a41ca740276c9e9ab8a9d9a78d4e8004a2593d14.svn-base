@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.accounting.dao.DvDao">
+	
+	<!-- 지출결의서 리스트 조회 (신청페이지) : 회계 총무 /관리자 -->
+	
+	<select id="listEmpDv" resultType = "kr.happyjob.study.accounting.model.DvModel">
+			SELECT
+           		 ai.dv_no            	<!-- 결의번호 -->
+			   , ai.loginID				<!-- 로그인 ID -->
+			   , ai.name				<!-- 사원명 	-->
+			   , gc.group_name			<!-- 계정대분류명 -->
+			   , ai.detail_account_nm	<!-- 상세분류명 -->
+			   , ai.acc_name			<!-- 거래처명 -->
+			   , ai.dv_reg_date			<!-- 신청일자 -->
+			   , ai.dv_use_date			<!-- 사용일자 -->
+         	   , ai.dv_amt				<!-- 지출금액 -->
+			   , ai.dv_app_yn			<!-- 승인여부 -->
+			   , ai.dv_app_date			<!-- 승인일자 -->
+			   , ai.dv_app_nm			<!-- 승인자 -->
+          FROM           
+            (  	select
+              		di.dv_no
+			      , di.loginID
+			      , DATE_FORMAT(di.dv_reg_date, '%Y-%m-%d') AS dv_reg_date
+			      , di.dv_use_date
+			      , ac.account_cd
+			      , ac.detail_account_cd
+			      , ac.detail_account_nm
+            	  , di.dv_amt
+			      , di.dv_app_yn
+			      , DATE_FORMAT(di.dv_app_date, '%Y-%m-%d') AS dv_app_date
+			      , di.dv_app_nm
+			      , di.dv_memo
+			      , di.acc_name
+			 	  , (select name 
+			 	  		from tb_userinfo ui 
+			 	  		where ui.loginID = di.loginID 
+			 	  	) as name	
+		          FROM tb_dv_info di inner join tb_account ac
+              	  on di.account_cd = ac.account_cd
+                  and di.detail_account_cd = ac.detail_account_cd
+          		) ai inner join tb_group_code gc on ai.account_cd = gc.group_code		
+			<where>
+			    <if test="(account_cd != null) and (!account_cd.equals(''))">
+			       and ai.account_cd = #{account_cd}
+			    </if>
+			    <if test="(detail_account_cd != null) and (!detail_account_cd.equals(''))">
+			       and ai.detail_account_cd = #{detail_account_cd}	
+			    </if>
+				<if test="(from_date != null) and (! from_date.equals(''))">
+  					and DATE_FORMAT(ai.dv_reg_date, '%Y-%m-%d')  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         		</if>
+         		<if test="(to_date != null) and (!to_date.equals(''))">
+         			and DATE_FORMAT(ai.dv_reg_date, '%Y-%m-%d')  <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         		</if> 
+				<if test="(dv_app_yn != null) and (!dv_app_yn.equals(''))">
+			       and ai.dv_app_yn = #{dv_app_yn}
+			    </if>
+				   and ai.loginID = #{loginID}
+			</where> 
+		order by ai.dv_no, ai.name, ai.dv_reg_date
+		LIMIT #{pageIndex}, #{pageSize}
+	
+	</select>
+
+
+
+	<!-- 지출결의서 갯수 조회(신청페이지) : 회계 총무 / 관리자 -->
+
+	<select id="countListEmpDv" resultType="int">
+		SELECT COUNT(1) AS tot_cnt FROM tb_dv_info
+		<where>
+			    <if test="(account_cd != null) and (!account_cd.equals(''))">
+			       and account_cd = #{account_cd}
+			    </if>
+			    <if test="(detail_account_cd != null) and (!detail_account_cd.equals(''))">
+			       and detail_account_cd = #{detail_account_cd}	
+			    </if>
+				<if test="(from_date != null) and (! from_date.equals(''))">
+  					and DATE_FORMAT(dv_reg_date, '%Y-%m-%d') <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         		</if>
+         		<if test="(to_date != null) and (!to_date.equals(''))">
+         			and DATE_FORMAT(dv_reg_date, '%Y-%m-%d') <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         		</if>       
+			    <if test="(dv_app_yn != null) and (!dv_app_yn.equals(''))">
+			       and dv_app_yn = #{dv_app_yn}
+			    </if>
+			       and loginID = #{loginID}
+		</where> 
+	
+	</select>
+
+
+	<!-- 지출결의서 단건 조회(신청페이지 모달)  -->
+	<select id="selectEmpDv" resultType = "kr.happyjob.study.accounting.model.DvModel">
+			SELECT
+           		 ai.dv_no				<!-- 결의번호 -->	
+			   , ai.loginId				<!-- 아이디 -->
+			   , ai.name                <!-- 사원명 -->
+			   , gc.group_name			<!-- 계정대분류명 -->
+			   , ai.detail_account_nm	<!-- 상세분류명 -->
+			   , ai.account_cd			<!-- 계정대분류코드 -->
+			   , ai.detail_account_cd	<!-- 상세분류코드 -->
+			   , ai.acc_name			<!-- 거래처명 -->
+			   , ai.dv_reg_date			<!-- 신청일자 -->
+			   , ai.dv_use_date			<!-- 사용일자 -->
+         	   , ai.dv_amt				<!-- 지출금액 -->			
+			   , ai.dv_memo				<!-- 비고 -->
+			   , ai.dv_return			<!-- 반려사유 -->
+			   , ai.att_filename		<!-- 파일이름 -->
+			   , ai.att_filepath		<!-- 파일경로 -->
+			   , ai.att_filesize		<!-- 파일사이즈 -->
+			   , ai.dv_app_yn
+          FROM           
+            (  	select
+              		di.dv_no
+			      , di.loginID
+			      , DATE_FORMAT(di.dv_reg_date,'%Y-%m-%d') AS dv_reg_date
+			      , di.dv_use_date
+			      , ac.account_cd
+			      , ac.detail_account_cd
+			      , ac.detail_account_nm
+            	  , di.dv_amt
+			      , di.dv_memo
+			      , di.dv_return
+			      , di.att_filename
+			      , di.att_filepath
+			      , di.att_filesize
+			      , di.acc_name
+			 	  , di.dv_app_yn
+			 	  , (select name 
+			 	  		from tb_userinfo ui 
+			 	  		where ui.loginID = di.loginID 
+			 	  	) as name	
+		          FROM tb_dv_info di inner join tb_account ac
+              	  on di.account_cd = ac.account_cd
+                  and di.detail_account_cd = ac.detail_account_cd
+          	) ai inner join tb_group_code gc on ai.account_cd = gc.group_code		
+			  where ai.dv_no = #{dv_no}	
+	</select>
+
+
+
+
+	<!-- 	지출결의 저장 (신청페이지) 	-->
+	<insert id="insertEmpDv">
+		 <selectKey resultType="string" keyProperty="re_no" order="BEFORE">
+      		select CONCAT(#{account_cd_modal}, #{detail_account_cd_modal} , LPAD(cast(cast(right(ifnull(max(dv_no),'AAAA000'),3)as unsigned) + 1 as char),3,'0'))
+              from tb_dv_info
+             where account_cd =	#{account_cd_modal}
+			   and detail_account_cd = #{detail_account_cd_modal}    
+         </selectKey>   
+		INSERT INTO tb_dv_info
+		(
+               dv_no
+			 , loginID	
+			 , dv_reg_date
+			 , dv_use_date
+			 , account_cd
+			 , detail_account_cd
+			 , dv_amt
+			 , dv_app_yn
+			 , dv_memo
+			 , acc_name  
+		)
+		VALUES
+		(
+			    #{re_no} 
+			,   #{loginID}
+			,	NOW()
+			,	STR_TO_DATE(#{dv_use_date},'%Y-%m-%d')
+			,	#{account_cd_modal}
+			,	#{detail_account_cd_modal}
+			,	#{dv_amt}
+	 		,	'1'
+			, 	#{dv_memo}
+			,	#{acc_name}
+			
+		)		
+	
+	
+	</insert>
+
+
+
+
+	<!-- 지출결의 번호 가져오기 -->
+	<select id = "selectDv_no" resultType="String">
+		select dv_no
+		from tb_dv_info
+		where dv_reg_date = (select max(dv_reg_date) from tb_dv_info);
+	</select>
+
+
+
+	<!-- 지출결의서 파일 업로드 -->
+	<update id ="updateDvFile">
+		UPDATE tb_dv_info SET
+				att_filename = #{att_filename}
+			  , att_filepath = #{att_filepath}
+			  , att_filesize = #{att_filesize}
+		WHERE
+			dv_no = #{dv_no}
+	</update>
+
+
+
+	<!-- 	    지출결의 수정 (신청페이지)	   -->
+	<update id="updateEmpDv">
+	
+		UPDATE  tb_dv_info  SET
+				dv_reg_date = NOW()
+			,	dv_use_date = STR_TO_DATE(#{dv_use_date},'%Y-%m-%d')
+			,	account_cd = #{account_cd_modal}
+			,   detail_account_cd = #{detail_account_cd_modal}
+			, 	dv_amt	= #{dv_amt}
+			,	acc_name	 = #{acc_name}
+			,	dv_memo		 = #{dv_memo}
+		WHERE	dv_no = #{dv_no}
+	</update>
+
+
+
+	<!-- 지출결의서 리스트 조회 (승인페이지) : 회계 총무 /임원 -->
+	
+	<select id="listBmDv" resultType = "kr.happyjob.study.accounting.model.DvModel">
+			SELECT
+           		 ai.dv_no            	<!-- 결의번호 -->
+			   , ai.loginID				<!-- 로그인 ID -->
+			   , ai.name				<!-- 사원명 -->
+			   , gc.group_name			<!-- 계정대분류명 -->
+			   , ai.detail_account_nm	<!-- 상세분류명 -->
+			   , ai.account_cd			<!-- 계정대분류코드 -->
+			   , ai.detail_account_cd	<!-- 상세분류코드 -->
+			   , ai.acc_name			<!-- 거래처명 -->
+			   , ai.dv_reg_date			<!-- 신청일자 -->
+			   , ai.dv_use_date			<!-- 사용일자 -->
+         	   , ai.dv_amt				<!-- 지출금액 -->
+			   , ai.dv_app_yn			<!-- 승인여부 -->
+			   , ai.dv_app_date			<!-- 승인일자 -->
+			   , ai.dv_app_nm			<!-- 승인자 -->
+
+          FROM           
+            (  	select
+              		di.dv_no
+			      , di.loginID
+			      , DATE_FORMAT(di.dv_reg_date,'%Y-%m-%d') AS dv_reg_date
+			      , di.dv_use_date
+			      , ac.account_cd
+			      , ac.detail_account_cd
+			      , ac.detail_account_nm
+            	  , di.dv_amt
+			      , di.dv_app_yn
+			      , DATE_FORMAT(di.dv_app_date, '%Y-%m-%d') AS dv_app_date
+			      , di.dv_app_nm
+			      , di.dv_memo
+			      , di.acc_name
+			 	  , (select name 
+			 	  		from tb_userinfo ui 
+			 	  		where ui.loginID = di.loginID 
+			 	  	) as name	
+		          FROM tb_dv_info di inner join tb_account ac
+              	  on di.account_cd = ac.account_cd
+                  and di.detail_account_cd = ac.detail_account_cd
+          		) ai inner join tb_group_code gc on ai.account_cd = gc.group_code		
+			<where>
+			   <if test="(account_cd != null) and (!account_cd.equals(''))">
+			       and ai.account_cd = #{account_cd}
+			    </if>
+			    <if test="(detail_account_cd != null) and (!detail_account_cd.equals(''))">
+			       and ai.detail_account_cd = #{detail_account_cd}	
+			    </if>
+				<if test="(from_date != null) and (! from_date.equals(''))">
+  					and DATE_FORMAT(ai.dv_reg_date, '%Y-%m-%d')  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         		</if>
+         		<if test="(to_date != null) and (!to_date.equals(''))">
+         			and DATE_FORMAT(ai.dv_reg_date, '%Y-%m-%d')  <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         		</if>  
+				<if test="(dv_app_yn != null) and (!dv_app_yn.equals(''))">
+			       and ai.dv_app_yn = #{dv_app_yn}
+			    </if>
+			</where> 
+		order by ai.dv_no, ai.name, ai.dv_reg_date
+		LIMIT #{pageIndex}, #{pageSize}
+	</select>
+
+
+
+	<!-- 지출결의서 갯수 조회(승인페이지) : 회계 총무 / 관리자 -->
+
+	<select id="countListBmDv" resultType="int">
+		SELECT COUNT(1) AS tot_cnt FROM tb_dv_info
+		<where>
+			    <if test="(account_cd != null) and (!account_cd.equals(''))">
+			       and account_cd = #{account_cd}
+			    </if>
+			    <if test="(detail_account_cd != null) and (!detail_account_cd.equals(''))">
+			       and detail_account_cd = #{detail_account_cd}	
+			    </if>
+				<if test="(from_date != null) and (! from_date.equals(''))">
+  					and DATE_FORMAT(dv_reg_date, '%Y-%m-%d')  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         		</if>
+         		<if test="(to_date != null) and (!to_date.equals(''))">
+         			and DATE_FORMAT(dv_reg_date, '%Y-%m-%d')   <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         		</if> 
+			    <if test="(dv_app_yn != null) and (!dv_app_yn.equals(''))">
+			       and dv_app_yn = #{dv_app_yn}
+			    </if>
+		</where> 
+	</select>
+
+
+
+	<!-- 지출결의서 단건 조회(승인페이지 모달)  : 회계 총무 / 임원-->
+	<select id="selectBmDv" resultType = "kr.happyjob.study.accounting.model.DvModel">
+			SELECT
+           		 ai.dv_no				<!-- 결의번호 -->	
+			   , ai.loginId				<!-- 아이디 -->
+			   , ai.name				<!-- 사원명 -->
+			   , gc.group_name			<!-- 계정대분류명 -->
+			   , ai.detail_account_nm	<!-- 상세분류명 -->
+			   , ai.account_cd			<!-- 계정대분류코드 -->
+			   , ai.detail_account_cd	<!-- 상세분류코드 -->
+			   , ai.acc_name			<!-- 거래처명 -->
+			   , ai.dv_reg_date			<!-- 신청일자 -->
+			   , ai.dv_use_date			<!-- 사용일자 -->
+         	   , ai.dv_amt				<!-- 지출금액 -->			
+			   , ai.dv_memo				<!-- 비고 -->
+			   , ai.dv_return			<!-- 반려사유 -->
+			   , ai.att_filename		<!-- 파일이름 -->
+			   , ai.att_filepath		<!-- 파일경로 -->
+			   , ai.att_filesize		<!-- 파일사이즈 -->
+			   , ai.dv_app_yn			<!-- 승인여부 -->
+
+          FROM           
+            (  	select
+              		di.dv_no
+			      , di.loginID
+			      , DATE_FORMAT(di.dv_reg_date,'%Y-%m-%d') AS dv_reg_date
+			      , di.dv_use_date
+			      , ac.account_cd
+			      , ac.detail_account_cd
+			      , ac.detail_account_nm
+            	  , di.dv_amt
+			      , di.dv_memo
+			      , di.dv_return
+			      , di.att_filename
+			      , di.att_filepath
+			      , di.att_filesize
+			      , di.acc_name
+			 	  , di.dv_app_yn
+			 	  , (select name 
+			 	  		from tb_userinfo ui 
+			 	  		where ui.loginID = di.loginID 
+			 	  	) as name	
+		          FROM tb_dv_info di inner join tb_account ac
+              	  on di.account_cd = ac.account_cd
+                  and di.detail_account_cd = ac.detail_account_cd
+          	) ai inner join tb_group_code gc on ai.account_cd = gc.group_code		
+			  where ai.dv_no = #{dv_no}	
+	</select>
+
+
+
+	<!-- 지출결의(신청페이지) 삭제 -->
+
+	<delete id="deleteEmpDv"> 
+		DELETE FROM tb_dv_info 
+		WHERE dv_no = #{dv_no} 
+	</delete>
+
+
+
+	<!-- 승인처리(승인페이지) -->
+	<update id = "saveAppDv">
+			
+	update tb_dv_info set
+		   dv_app_yn = #{dv_radio}
+		   ,dv_app_date = NOW()
+		   ,dv_app_nm = #{appLoginID}
+		   ,dv_return = #{dv_return}			
+		   
+		   where dv_no = #{dv_no}	 
+	</update>
+
+
+
+	<!-- 승인처리 구분 번호 가져오기 -->
+	<select id = "selectAppType" resultType="int">
+		select dv_app_yn
+		from tb_dv_info
+		where dv_app_date = (select max(dv_app_date) from tb_dv_info);
+	</select>
+
+
+
+	<!-- 승인처리시 계정금액정보 테이블로 데이터 insert -->
+ 	<insert id = "insertToaccslip">
+		 <selectKey resultType="int" keyProperty="slip_no" order="BEFORE">
+      		select MAX(slip_no)+1 from tb_acc_slip 
+         </selectKey> 
+	insert into tb_acc_slip
+		( 
+	      slip_no
+	    , order_cd
+		, account_cd
+		, detail_account_cd
+		, occur_date
+		, amt
+		, note
+		, direct_id
+	
+		)
+		
+		select  	 
+			  #{slip_no} 
+			, dv_no
+	        , account_cd
+			, detail_account_cd
+			, dv_use_date
+			, cast(dv_amt as char)
+			, dv_memo
+			, loginID
+		
+			FROM tb_dv_info
+			where dv_app_date = (select max(dv_app_date) from tb_dv_info);
+
+	</insert>
+
+
+	<!-- 지출결의 첨부서류 파일정보 가져오기 -->
+	<select id = "selectAttFile" resultType="String">
+		select 	
+			   att_filename
+		from tb_dv_info
+		where dv_no = #{dv_no};
+	</select>
+
+
+
+
+
+</mapper>
+

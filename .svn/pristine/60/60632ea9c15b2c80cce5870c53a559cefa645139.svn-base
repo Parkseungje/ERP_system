@@ -1,0 +1,125 @@
+package kr.happyjob.study.accounting.service;
+
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import kr.happyjob.study.accounting.model.DvModel;
+import kr.happyjob.study.accounting.service.DvService;
+import kr.happyjob.study.common.comnUtils.FileUtilCho;
+import kr.happyjob.study.accounting.dao.DvDao;
+
+@Service
+public class DvServiceImpl implements DvService{
+
+	@Autowired
+	DvDao dvDao;
+
+	@Value("${fileUpload.rootPath}")
+	private String rootPath;
+	@Value("${fileUpload.accimgPath}")
+	private String accimgPath;
+	
+	
+	/** 지출결의 목록 조회(신청페이지) **/
+	
+	public List<DvModel> listEmpDv(Map<String, Object> paramMap) throws Exception{
+		
+		List<DvModel> listEmpDv = dvDao.listEmpDv(paramMap);
+		
+		return listEmpDv;
+		
+	}
+	
+	/** 지출결의 목록 카운트 조회(신청페이지) **/
+	
+	public int countListEmpDv(Map<String, Object> paramMap) throws Exception{
+		
+		   int totalCount = dvDao.countListEmpDv(paramMap);
+			
+		   return totalCount;
+		}	
+	
+	/** 지출결의 단건 조회 (신청페이지) **/
+	public DvModel selectEmpDv(Map<String, Object> paramMap) throws Exception {
+		
+		DvModel empDvModel = dvDao.selectEmpDv(paramMap);
+		return empDvModel;
+	}
+
+	/** 그룹코드 저장(신청페이지) **/
+	public void insertEmpDv(Map<String, Object> paramMap, HttpServletRequest request) throws Exception {
+		MultipartHttpServletRequest mpRequest = (MultipartHttpServletRequest)request;
+		String dv_no = dvDao.selectDv_no(paramMap);
+		
+		System.out.println("dv_no : "+dv_no);
+		String itemFilePath = accimgPath + dv_no + File.separator;
+		
+		FileUtilCho fileUtilCho = new FileUtilCho(mpRequest, rootPath, itemFilePath);
+		Map<String, Object> listFileUtilModel = fileUtilCho.uploadFiles();
+		
+		paramMap.put("att_filename", listFileUtilModel.get("file_nm"));
+		paramMap.put("att_filepath", listFileUtilModel.get("file_loc"));
+		paramMap.put("att_filesize", listFileUtilModel.get("file_size"));
+		paramMap.put("dv_no", dv_no);
+		
+		try{
+			dvDao.insertEmpDv(paramMap);
+			
+			if(mpRequest.getFile("att_file").getSize() > 0) {
+				dvDao.updateDvFile(paramMap);
+			}else {
+				System.out.println("프로필 사진 없음");
+			}
+		}catch(Exception e){
+			throw e;
+		}
+	}
+	
+	/** 지출결의 수정(신청페이지) **/
+	public int updateEmpDv(Map<String, Object> paramMap) throws Exception {
+		
+		int ret = dvDao.updateEmpDv(paramMap);
+		return ret;
+	}
+
+	
+	/** 지출결의 목록 조회(승인페이지) **/
+	public List<DvModel> listBmDv(Map<String, Object> paramMap) throws Exception{
+		
+		List<DvModel> listBmDv = dvDao.listBmDv(paramMap);
+		
+		return listBmDv;
+		
+	}
+	
+	/** 지출결의 목록 카운트 조회(승인페이지) **/
+	
+	public int countListBmDv(Map<String, Object> paramMap) throws Exception{
+		
+		   int totalCount = dvDao.countListBmDv(paramMap);
+			
+		   return totalCount;
+		}	
+	
+	/** 지출결의 단건 조회 (신청페이지) **/
+	public DvModel selectBmDv(Map<String, Object> paramMap) throws Exception {
+		
+		DvModel bmDvModel = dvDao.selectBmDv(paramMap);
+		return bmDvModel;
+	}
+	
+}
+	
+	
+	
+

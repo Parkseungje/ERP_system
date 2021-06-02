@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.employee.dao.EmpMgtDao">
+	
+	
+	<!-- 사원등록 -> 사번 만들기 -->
+	<select id = "gainLoginID" resultType = "String">
+		SELECT CONCAT(DATE_FORMAT(NOW(), '%Y'),LPAD(CAST((CAST(SUBSTR(IFNULL(MAX(loginID), CONCAT(DATE_FORMAT(NOW(), '%Y'),'000')),5) AS unsigned) + 1) AS char),3,'0'))
+ 			 FROM tb_userinfo
+ 		WHERE loginID LIKE CONCAT(DATE_FORMAT(NOW(), '%Y'),'%')
+	</select>
+	
+	<!-- 사원등록 -> tb_userinfo -->
+	<insert id="empRegister1">
+		INSERT INTO tb_userinfo
+			(
+				loginID
+			  , user_type
+			  , name
+			  , password
+			  , tel
+			  , sex
+			  , mail
+			  , zip_code
+			  , addr
+			  , addr_detail
+			  , bank
+			  , account
+			  , del_cd
+			) VALUES (
+						#{loginID}
+					  , #{user_type}
+					  , #{name}
+					  , '0000'
+					  , #{tel}
+					  , #{sex}
+					  , #{mail}
+					  , #{zip_code}
+					  , #{addr}
+					  , #{addr_detail}
+					  , #{bank}
+					  , #{account}
+					  , 'n'
+					)
+	</insert>
+	
+	<!-- 사원등록 -> tb_emp -->
+	<insert id="empRegister2">
+		INSERT INTO tb_emp
+			(
+			    loginID
+			  ,	regno
+			  <if test="(birthday != null) and (!birthday.equals(''))">
+			  , birthday
+			  </if>
+			  , school
+			  , entry_date
+			  , year_salary
+			  , salary
+			  <if test="(memo != null) and (!memo.equals(''))">
+			  , memo
+			  </if>
+			  , rest_yn
+			  , out_yn
+			  , dept_cd
+			  , nat_ps
+			  , h_insure
+			  , ohs_insure
+			  , e_insure
+			  , income_tax
+			  , poscd
+			) VALUES (
+						#{loginID}
+					  ,	#{regno}
+					  <if test="(birthday != null) and (!birthday.equals(''))">
+					  , #{birthday}
+					  </if>
+					  , #{school}
+					  , #{entry_date}
+					  , #{year_salary}
+					  , Round((#{year_salary} DIV 12), -1)
+					  <if test="(memo != null) and (!memo.equals(''))">
+					  , #{memo}
+					  </if>
+					  , #{rest_yn}
+					  , 'n'
+					  , #{dept_cd}
+					  , Round((#{year_salary} DIV 12)*#{natpsV}, -1)
+					  , Round((#{year_salary} DIV 12)*#{hinsureV}, -1)
+					  , Round((#{year_salary} DIV 12)*#{ohsinsureV}, -1)
+					  , Round((#{year_salary} DIV 12)*#{einsureV}, -1)
+					  , Round((#{year_salary} DIV 12)*#{incometaxV}, -1)
+					  , #{poscd}
+					)
+	</insert>
+	
+	<!-- 사원등록 (프로필 사진) -->
+	<update id="empRegisterProfile">
+		UPDATE tb_emp SET
+				filename = #{filename}
+			  , filepath = #{filepath}
+			  , filesize = #{filesize}
+		WHERE
+			loginID = #{loginID}
+	</update>
+	
+	<!-- 사원정보 수정 -> tb_userinfo -->
+	<update id = "updateEmp1">
+		UPDATE tb_userinfo SET
+			    user_type = #{user_type}
+			  , name = #{name}
+			  , tel = #{tel}
+			  , sex = #{sex}
+			  , mail = #{mail}
+			  , zip_code = #{zip_code}
+			  , addr = #{addr}
+			  , addr_detail = #{addr_detail}
+			  , bank = #{bank}
+			  , account = #{account}
+		WHERE
+			loginID = #{loginID}
+	</update>
+	
+	<!-- 사원정보 수정 -> 기존 직급 가져오기 -->
+	<select id = "getPoscd" resultType = "int">
+		SELECT poscd
+			FROM tb_emp
+		WHERE loginID = #{loginID}
+	</select>
+	
+	<!-- 사원정보 수정 -> 승진 시 승진이력테이블에 데이터 추가 -->
+	<insert id = "insertGradeHis" useGeneratedKeys="true" keyProperty="grade_seq" >
+		INSERT INTO tb_grade_his
+			(
+			    loginID
+			  , POScd
+			  , promotion_date
+			) VALUES (
+						#{loginID}
+					  ,	#{poscd}
+					  , now()
+					)
+	</insert>
+
+	<!-- 사원정보 수정 -> tb_emp -->
+	<update id = "updateEmp2">
+		UPDATE tb_emp SET
+			  regno = #{regno}
+			  <if test="(birthday != null) and (!birthday.equals(''))">
+			  , birthday = #{birthday}
+			  </if>
+			  , school = #{school}
+			  , year_salary = #{year_salary}
+			  , salary = Round((#{year_salary} DIV 12), -1)
+			  <if test="(memo != null) and (!memo.equals(''))">
+			  , memo = #{memo}
+			  </if>
+			  , rest_yn = #{rest_yn}
+			  , dept_cd =  #{dept_cd}
+			  , nat_ps = Round((#{year_salary} DIV 12)*#{natpsV}, -1)
+			  , h_insure = Round((#{year_salary} DIV 12)*#{hinsureV}, -1)
+			  , ohs_insure = Round((#{year_salary} DIV 12)*#{ohsinsureV}, -1)
+			  , e_insure = Round((#{year_salary} DIV 12)*#{einsureV}, -1)
+			  , income_tax = Round((#{year_salary} DIV 12)*#{incometaxV}, -1)
+			  , poscd = #{poscd}
+		WHERE
+			loginID = #{loginID}
+	</update>
+	
+
+	<!-- 사원 리스트 조회 -->
+	<select id = "showEmpList" resultType="kr.happyjob.study.employee.model.EmployeeModel">
+		SELECT ui.loginID
+	  		 , ui.name
+	  		 , dp.dept_name AS 'dept_name'
+	  		 , pc.detail_name AS 'POScd'
+	  		 , DATE_FORMAT(entry_date, '%Y-%m-%d') AS "entry_date"
+	  		 , DATE_FORMAT(emp.retire_date, '%Y-%m-%d') AS "retire_date"
+	  		 , emp.out_yn
+	  		 , emp.rest_yn
+	  		 , CASE
+                  WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(DATE_SUB(curdate(),INTERVAL 1 month),'%Y%m')
+                  		THEN 'B'
+              	  WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(curdate(),'%Y%m')
+                  		THEN 'T'  
+                  ELSE 'N'
+               END AS entry_type
+		FROM tb_userinfo ui
+			INNER JOIN tb_emp emp ON ui.loginID = emp.loginID
+			LEFT JOIN (SELECT dc.detail_name, dc.detail_code
+							FROM tb_detail_code dc 
+					   WHERE dc.group_code = 'POScd')pc ON emp.POScd = pc.detail_code
+			LEFT JOIN (SELECT dc.dept_cd, dc.dept_name
+							FROM tb_dept dc)dp ON emp.dept_cd = dp.dept_cd
+		<where><!-- 검색 조건 -->
+			<if test = "(retire_yn != null) and (!retire_yn.equals(''))">
+				AND out_yn = #{retire_yn}
+			</if>
+			<if test="(from_date != null) and (!from_date.equals('')) and (to_date != null) and (!to_date.equals(''))">
+				AND emp.entry_date BETWEEN #{from_date} and #{to_date}
+			</if>
+			<if test = "(searchKey_dept != null) and (!searchKey_dept.equals(''))">
+				AND emp.dept_cd = #{searchKey_dept}
+			</if>
+			<if test = "(searchKey_poscd != null) and (!searchKey_poscd.equals(''))">
+				AND emp.POScd = #{searchKey_poscd}
+			</if>
+			<if test="(searchKey != null) and (!searchKey.equals(''))">
+				<choose>
+					<when test="(searchKey != null) and (searchKey eq 'loginID'.toString())">
+						AND ui.loginID LIKE CONCAT('%', #{searchWord}, '%')
+					</when>
+					<when test="(searchKey != null) and (searchKey eq 'name'.toString())">
+						AND ui.name Like CONCAT('%', #{searchWord}, '%')
+					</when>
+				</choose>
+			</if>
+		</where>
+		<if test = "(retire_yn != null) and (retire_yn eq 'n'.toString())">
+			ORDER BY emp.entry_date DESC
+		</if>
+		<if test = "(retire_yn != null) and (retire_yn eq 'y'.toString())">
+			ORDER BY emp.retire_date DESC
+		</if>
+		<if test ="(pageIndex != null) and (!pageIndex.equals('')) || (pageSize != null) and (!pageSize.equals(''))">
+			LIMIT #{pageIndex}, #{pageSize}
+		</if>
+	</select>
+	
+	<!-- 사원 리스트 총 글 수 조회 -->
+	<select id = "countEmpList" resultType = "int">
+		SELECT COUNT(*) AS tot_cnt 
+			FROM tb_emp emp
+		LEFT JOIN tb_userinfo ui ON ui.loginID = emp.loginID
+		<where><!-- 검색 조건 -->
+			<if test = "(retire_yn != null) and (!retire_yn.equals(''))">
+				AND out_yn = #{retire_yn}
+			</if>
+			<if test="(from_date != null) and (!from_date.equals('')) and (to_date != null) and (!to_date.equals(''))">
+				AND emp.entry_date between #{from_date} and #{to_date}
+			</if>
+			<if test = "(searchKey_dept != null) and (!searchKey_dept.equals(''))">
+				AND emp.dept_cd = #{searchKey_dept}
+			</if>
+			<if test = "(searchKey_poscd != null) and (!searchKey_poscd.equals(''))">
+				AND emp.POScd = #{searchKey_poscd}
+			</if>
+			<if test="(searchKey != null) and (!searchKey.equals(''))">
+				<choose>
+					<when test="(searchKey != null) and (searchKey eq 'loginID'.toString())">
+						AND ui.loginID LIKE CONCAT('%', #{searchWord}, '%')
+					</when>
+					<when test="(searchKey != null) and (searchKey eq 'name'.toString())">
+						AND ui.name Like CONCAT('%', #{searchWord}, '%')
+					</when>
+				</choose>
+			</if>
+		</where>
+	</select>
+	
+	<!-- 사원 상세조회 -->
+	<select id = "viewEmpDtl" resultType="kr.happyjob.study.employee.model.EmployeeModel">
+		SELECT ui.loginID, ui.user_type, ui.name, ui.tel, ui.sex, ui.mail, ui.zip_code, ui.addr, ui.addr_detail, ui.bank, ui.account,
+				emp.regno, emp.birthday, emp.school, DATE_FORMAT(entry_date, '%Y-%m-%d') AS "entry_date", DATE_FORMAT(emp.retire_date, '%Y-%m-%d') AS "retire_date", 
+				emp.year_salary, TRUNCATE((year_salary DIV 12)*(ROUND(DATEDIFF(now(),entry_date) / 365)), -1) AS 'oamt', emp.memo, emp.out_yn, emp.rest_yn, emp.filename, emp.filepath, emp.dept_cd, emp.poscd, emp.retire_note, 
+				CASE
+                  WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(DATE_SUB(curdate(),INTERVAL 1 month),'%Y%m')
+                  		THEN 'B'
+              	  WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(curdate(),'%Y%m')
+                  		THEN 'T'  
+                  ELSE 'N'
+               END AS entry_type
+			FROM tb_userinfo ui
+				INNER JOIN tb_emp emp ON ui.loginID = emp.loginID
+		WHERE ui.loginID = #{loginID}
+	</select>
+	
+	<!-- 사원 상세조회 -> 근무연차 조회 -->
+	<select id = "getWorkyear" resultType = "int">
+		SELECT ROUND(DATEDIFF(now(),entry_date) / 365) FROM tb_emp WHERE loginID = #{loginID}
+	</select>
+	
+	<!-- 퇴직 처리 -->
+	<update id = "resignEmp">
+		UPDATE tb_emp
+			SET
+			    retire_date = #{retire_date}
+			  , rest_yn = ''
+			  , out_yn = 'y'
+			  <if test="(retire_note != null) and (!retire_note.equals(''))">
+			  , retire_note = #{retire_note}
+			  </if>
+			  ,	oamt = TRUNCATE((year_salary DIV 12)*(ROUND(DATEDIFF(now(),entry_date) / 365)), -1)
+			WHERE loginID = #{loginID}
+	</update>
+	
+	<select id = "isExistOamt" resultType = "int">
+			SELECT oamt FROM tb_emp WHERE loginID = #{loginID}
+	</select>
+	
+	<!-- 퇴직금 지급 -->
+	<insert id = "payOamt">
+		<if test = "oamt > 0">
+			INSERT INTO tb_acc_slip
+				(
+					slip_no
+				  , account_cd
+				  , detail_account_cd
+				  , occur_date
+				  , amt
+				  , direct_id
+				) VALUES (
+							(SELECT maxfield FROM
+							(SELECT MAX(slip_no) AS maxfield FROM tb_acc_slip) AS sub_table) + 1
+						   , 'C300'
+						   , '306'
+						   , #{retire_date}
+						   , #{oamt}
+						   , #{loginID}
+						)
+		</if>
+	</insert>
+
+	<!-- 퇴직자 일급 계산 지급 -> tb_acc_slip -->
+	<insert id = "paySalary">
+		INSERT INTO tb_acc_slip
+				(
+					slip_no
+				  , account_cd
+				  , detail_account_cd
+				  , occur_date
+				  , amt
+				  , direct_id
+				) VALUES (
+							(SELECT maxfield FROM
+							(SELECT MAX(slip_no) AS maxfield FROM tb_acc_slip) AS sub_table) + 1
+						   , 'C300'
+						   , '301'
+						   , #{retire_date}
+						   , (SELECT 
+						   		TRUNCATE((salary / CAST(DATE_FORMAT(LAST_DAY(NOW()),'%d') AS UNSIGNED)) 
+						   		* (DATEDIFF(NOW(), (LAST_DAY(NOW() - INTERVAL 1 month) + INTERVAL 1 day))+1), -1)
+								FROM tb_emp WHERE loginID = #{loginID})
+						   , #{loginID}
+						)
+	</insert>
+	<!-- 퇴직자 전 달 월급 계산 지급 -> tb_sal_his -->
+	<insert id = "paySalary2">
+		INSERT INTO tb_sal_his (loginID, pay_seq, year_salary, salary, nat_ps, h_insure, ohs_insure, e_insure, income_tax, net_pay, payment_date)
+		SELECT emp.loginID
+			 , (SELECT maxfield FROM
+			   (SELECT MAX(pay_seq) AS maxfield FROM tb_sal_his) AS sub_table) + 1 AS pay_seq
+			 , emp.year_salary
+			 , CASE
+	             WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(DATE_SUB(curdate(),INTERVAL 1 month),'%Y%m')
+	             		THEN ROUND((emp.salary/cast(date_format(LAST_DAY(NOW() - interval 1 month),'%d') as unsigned)) * TIMESTAMPDIFF(DAY, emp.entry_date, LAST_DAY(NOW() - interval 1 month)), -1)
+	             WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(curdate(),'%Y%m')
+	             		THEN '0'              
+	         	 ELSE emp.salary
+	           END AS salary
+	         , CASE
+	          	 WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(DATE_SUB(curdate(),INTERVAL 1 month),'%Y%m')
+	             		THEN '0'
+	        	 WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(curdate(),'%Y%m')
+	             		THEN '0'  
+	             ELSE emp.nat_ps
+	           END AS nat_ps
+	         , CASE
+	             WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(DATE_SUB(curdate(),INTERVAL 1 month),'%Y%m')
+	             		THEN '0'
+	         	 WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(curdate(),'%Y%m')
+	             		THEN '0'  
+	             ELSE emp.h_insure
+	           END AS h_insure
+	         , CASE
+	             WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(DATE_SUB(curdate(),INTERVAL 1 month),'%Y%m')
+	             		THEN '0'
+	         	 WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(curdate(),'%Y%m')
+	             		THEN '0'  
+	             ELSE emp.ohs_insure
+	           END AS ohs_insure
+	         , CASE
+	             WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(DATE_SUB(curdate(),INTERVAL 1 month),'%Y%m')
+	             		THEN '0'
+	         	 WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(curdate(),'%Y%m')
+	             		THEN '0'  
+	             ELSE emp.e_insure
+	           END AS e_insure
+	         , CASE
+	             WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(DATE_SUB(curdate(),INTERVAL 1 month),'%Y%m')
+	            		THEN '0'
+	         	 WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(curdate(),'%Y%m')
+	             		THEN '0'  
+	             ELSE emp.income_tax
+	           END AS income_tax
+			 , CASE
+	             WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(DATE_SUB(curdate(),INTERVAL 1 month),'%Y%m')
+	             		THEN ROUND((emp.salary/cast(date_format(LAST_DAY(NOW() - interval 1 month),'%d') as unsigned)) * TIMESTAMPDIFF(DAY, emp.entry_date, LAST_DAY(NOW() - interval 1 month)), -1)+IFNULL(al.extra_pay,0)
+	             WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(curdate(),'%Y%m')
+	             		THEN '0'  
+	         	 ELSE (emp.salary - emp.nat_ps - emp.h_insure - emp.ohs_insure - emp.e_insure - emp.income_tax)+IFNULL(al.extra_pay,0)
+	           END AS net_pay
+	      	 , #{retire_date} AS payment_date
+		FROM tb_emp emp
+		LEFT OUTER JOIN (
+	      				 SELECT SUM(IFNULL(di.dv_amt,0)) AS extra_pay, di.loginID
+	                     	FROM tb_dv_info di
+	                     WHERE (di.account_cd LIKE 'D%' OR di.account_cd LIKE 'E%' OR di.account_cd LIKE 'F%') 
+	                     AND di.dv_app_yn = '2'
+	                     AND date_format(di.dv_use_date,'%Y%m') = date_format(DATE_SUB(STR_TO_DATE(concat(#{from_date},'-01'), '%Y-%m-%d'),INTERVAL 1 month),'%Y%m')
+	                    	 GROUP BY di.loginID
+	                    ) al ON emp.loginID = al.loginID
+		WHERE emp.loginID = #{loginID}
+	</insert>
+	
+	<!-- 퇴직자 전 달 월급 계산 지급 -> tb_acc_slip (실급여) -->
+	<insert id = "paySalary_netpay">
+		INSERT INTO tb_acc_slip (slip_no, account_cd, detail_account_cd, occur_date, amt, direct_id)
+		SELECT (SELECT maxfield FROM
+			   (SELECT MAX(slip_no) AS maxfield FROM tb_acc_slip) AS sub_table) + 1 AS 'slip_no'
+			 , 'C300'
+			 , '301'
+			 , #{retire_date} AS payment_date
+			 , CASE 
+	      			WHEN DATE_FORMAT(emp.entry_date,'%Y%m') = DATE_FORMAT(DATE_SUB(curdate(),INTERVAL 1 month),'%Y%m')
+	      			THEN ROUND((emp.salary/cast(date_format(LAST_DAY(NOW() - interval 1 month),'%d') as unsigned)) * TIMESTAMPDIFF(DAY, emp.entry_date, LAST_DAY(NOW() - interval 1 month)), -1)+IFNULL(al.extra_pay,0)
+	      			ELSE (emp.salary - emp.nat_ps - emp.h_insure - emp.ohs_insure - emp.e_insure - emp.income_tax)+IFNULL(al.extra_pay,0)
+	      	   END AS amt
+			 , #{loginID}
+		FROM tb_emp emp
+		LEFT OUTER JOIN (
+	     				 SELECT SUM(IFNULL(di.dv_amt,0)) AS extra_pay, di.loginID
+	                        FROM tb_dv_info di
+	                     WHERE (di.account_cd LIKE 'D%' OR di.account_cd LIKE 'E%' OR di.account_cd LIKE 'F%') 
+	                     AND di.dv_app_yn = '2'
+	                     AND date_format(di.dv_use_date,'%Y%m') = date_format(DATE_SUB(STR_TO_DATE(concat(#{from_date},'-01'), '%Y-%m-%d'),INTERVAL 1 month),'%Y%m')
+	                   	 GROUP BY di.loginID
+	                  	) al ON emp.loginID = al.loginID
+			WHERE emp.loginID = #{loginID}
+	</insert>
+	<!-- 퇴직자 전 달 월급 계산 지급 -> tb_acc_slip (국민연금) -->
+	<insert id = "paySalary_natps">
+		INSERT INTO tb_acc_slip (slip_no, account_cd, detail_account_cd, occur_date, amt, direct_id)
+		SELECT (SELECT maxfield FROM
+			   (SELECT MAX(slip_no) AS maxfield FROM tb_acc_slip) AS sub_table) + 1 AS 'slip_no'
+			 , 'C300'
+			 , '302'
+			 , #{retire_date} AS payment_date
+			 , emp.nat_ps
+			 , #{loginID}
+		FROM tb_emp emp
+			WHERE emp.loginID = #{loginID}
+	</insert>
+	<!-- 퇴직자 전 달 월급 계산 지급 -> tb_acc_slip (건강보험) -->
+	<insert id = "paySalary_hinsure">
+		INSERT INTO tb_acc_slip (slip_no, account_cd, detail_account_cd, occur_date, amt, direct_id)
+		SELECT (SELECT maxfield FROM
+			   (SELECT MAX(slip_no) AS maxfield FROM tb_acc_slip) AS sub_table) + 1 AS 'slip_no'
+			 , 'C300'
+			 , '303'
+			 , #{retire_date} AS payment_date
+			 , emp.h_insure
+			 , #{loginID}
+		FROM tb_emp emp
+			WHERE emp.loginID = #{loginID}
+	</insert>
+	<!-- 퇴직자 전 달 월급 계산 지급 -> tb_acc_slip (산재보험) -->
+	<insert id = "paySalary_ohsinsure">
+		INSERT INTO tb_acc_slip (slip_no, account_cd, detail_account_cd, occur_date, amt, direct_id)
+		SELECT (SELECT maxfield FROM
+			   (SELECT MAX(slip_no) AS maxfield FROM tb_acc_slip) AS sub_table) + 1 AS 'slip_no'
+			 , 'C300'
+			 , '304'
+			 , #{retire_date} AS payment_date
+			 , emp.ohs_insure
+			 , #{loginID}
+		FROM tb_emp emp
+			WHERE emp.loginID = #{loginID}
+	</insert>
+	<!-- 퇴직자 전 달 월급 계산 지급 -> tb_acc_slip (고용보험) -->
+	<insert id = "paySalary_einsure">
+		INSERT INTO tb_acc_slip (slip_no, account_cd, detail_account_cd, occur_date, amt, direct_id)
+		SELECT (SELECT maxfield FROM
+			   (SELECT MAX(slip_no) AS maxfield FROM tb_acc_slip) AS sub_table) + 1 AS 'slip_no'
+			 , 'C300'
+			 , '305'
+			 , #{retire_date} AS payment_date
+			 , emp.e_insure
+			 , #{loginID}
+		FROM tb_emp emp
+			WHERE emp.loginID = #{loginID}
+	</insert>
+	
+	<!-- 사원정보 삭제 -> tb_userinfo -->
+	<delete id ="deleteEmp1">
+		DELETE FROM tb_userinfo WHERE loginID = #{loginID}
+	</delete>
+	
+	<!-- 사원정보 삭제 -> tb_emp -->
+	<delete id = "deleteEmp2">
+		DELETE FROM tb_emp WHERE loginID = #{loginID}
+	</delete>
+	
+	<!-- 사원정보 삭제 -> tb_ta_mgt -->
+	<delete id = "deleteEmp3">
+		DELETE FROM tb_ta_mgt WHERE loginID = #{loginID}
+	</delete>
+	
+	
+	<!-- 승진내역 리스트 조회 -->
+	<select id = "empGradeList" resultType="kr.happyjob.study.employee.model.EmployeeModel">
+		SELECT ui.loginID, ui.name, dp.dept_name AS 'dept_name', pc.detail_name AS 'POScd', gh.promotion_date 
+			FROM tb_grade_his gh 
+		LEFT JOIN tb_userinfo ui ON ui.loginID = gh.loginID
+		LEFT JOIN tb_emp emp ON emp.loginID = gh.loginID
+		LEFT JOIN (SELECT dc.detail_name, dc.detail_code
+						FROM tb_detail_code dc 
+				   WHERE dc.group_code = 'POScd')pc ON gh.POScd = pc.detail_code
+		LEFT JOIN (SELECT dc.dept_cd, dc.dept_name
+						FROM tb_dept dc)dp ON emp.dept_cd = dp.dept_cd
+		<where><!-- 검색 조건 -->
+			<if test="(from_date != null) and (!from_date.equals('')) and (to_date != null) and (!to_date.equals(''))">
+				AND gh.promotion_date BETWEEN #{from_date} and #{to_date}
+			</if>
+			<if test = "(searchKey_dept != null) and (!searchKey_dept.equals(''))">
+				AND emp.dept_cd = #{searchKey_dept}
+			</if>
+			<if test = "(searchKey_poscd != null) and (!searchKey_poscd.equals(''))">
+				AND gh.POScd = #{searchKey_poscd}
+			</if>
+			<if test="(searchKey != null) and (!searchKey.equals(''))">
+				<choose>
+					<when test="(searchKey != null) and (searchKey eq 'loginID'.toString())">
+						AND ui.loginID LIKE CONCAT('%', #{searchWord}, '%')
+					</when>
+					<when test="(searchKey != null) and (searchKey eq 'name'.toString())">
+						AND ui.name Like CONCAT('%', #{searchWord}, '%')
+					</when>
+				</choose>
+			</if>
+		</where>
+		ORDER BY gh.promotion_date DESC
+		LIMIT #{pageIndex},#{pageSize}
+	</select>
+	
+	<!-- 승진내역 리스트 총 글 수 조회 -->
+	<select id = "countEmpGradeList" resultType = "int">
+		SELECT COUNT(*) AS tot_cnt 
+			FROM tb_grade_his gh 
+		LEFT JOIN tb_userinfo ui ON ui.loginID = gh.loginID
+		LEFT JOIN tb_emp emp ON emp.loginID = gh.loginID
+		<where><!-- 검색 조건 -->
+			<if test="(from_date != null) and (!from_date.equals('')) and (to_date != null) and (!to_date.equals(''))">
+				AND gh.promotion_date between #{from_date} and #{to_date}
+			</if>
+			<if test = "(searchKey_dept != null) and (!searchKey_dept.equals(''))">
+				AND emp.dept_cd = #{searchKey_dept}
+			</if>
+			<if test = "(searchKey_poscd != null) and (!searchKey_poscd.equals(''))">
+				AND gh.POScd = #{searchKey_poscd}
+			</if>
+			<if test="(searchKey != null) and (!searchKey.equals(''))">
+				<choose>
+					<when test="(searchKey != null) and (searchKey eq 'loginID'.toString())">
+						AND ui.loginID LIKE CONCAT('%', #{searchWord}, '%')
+					</when>
+					<when test="(searchKey != null) and (searchKey eq 'name'.toString())">
+						AND ui.name Like CONCAT('%', #{searchWord}, '%')
+					</when>
+				</choose>
+			</if>
+		</where>
+	</select>
+	
+	<!-- 승진내역 상세리스트 조회 -->
+	<select id = "empDtlGradeList" resultType="kr.happyjob.study.employee.model.EmployeeModel">
+		SELECT
+			ui.loginID, ui.name, dp.dept_name AS 'dept_name', pc.detail_name AS 'POScd', gh.promotion_date 
+		FROM tb_grade_his gh 
+			LEFT JOIN tb_userinfo ui ON ui.loginID = gh.loginID
+			LEFT JOIN tb_emp emp ON emp.loginID = gh.loginID
+			LEFT JOIN (SELECT dc.detail_name, dc.detail_code
+						FROM tb_detail_code dc 
+				   WHERE dc.group_code = 'POScd')pc ON gh.POScd = pc.detail_code
+			LEFT JOIN (SELECT dc.dept_cd, dc.dept_name
+						FROM tb_dept dc)dp ON emp.dept_cd = dp.dept_cd
+		WHERE gh.loginID = #{loginID}
+		ORDER BY gh.POScd
+		LIMIT #{pageIndex},#{pageSize}
+	</select>
+	
+	<!-- 승진내역 상세리스트 총 글 수 조회 -->
+	<select id = "countEmpDtlGradeList" resultType = "int">
+		SELECT COUNT(*) AS tot_cnt 
+			FROM tb_grade_his gh 
+		WHERE gh.loginID = #{loginID}
+	</select>
+</mapper>

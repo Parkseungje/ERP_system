@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.login.dao.LoginDao">
+   
+   <!-- 사용자 로그인 체크 -->
+   <select id="checkLogin" resultType="String">
+      /*kr.kosmo.jobkorea.login.dao.LoginDao.checkLogin*/
+            SELECT  user_Type
+              FROM    tb_userinfo 
+            WHERE   loginID = #{lgn_Id}
+               AND  password = #{pwd}
+     </select>
+     
+   
+   <!-- 사용자 로그인 -->
+   <select id="selectLogin" resultType="kr.happyjob.study.login.model.LgnInfoModel">
+      /*kr.kosmo.jobkorea.login.dao.LoginDao.selectLogin*/
+      SELECT  ui.loginID as lgn_id
+               , ui.name as usr_nm
+               , ui.user_Type as mem_author
+               , ep.POScd
+               , (select dc.detail_name from tb_detail_code dc where dc.group_code = 'POScd' and dc.detail_code = ep.POScd ) as posnm
+               , round(DATEDIFF(now(),ep.entry_date) / 365) as workyear
+      FROM tb_userinfo ui left outer join tb_emp ep on ui.loginID = ep.loginID
+     WHERE ui.loginID = #{lgn_Id}
+        AND ui.password = #{pwd}
+     </select>
+     
+     
+<!-- 사용자 메뉴 권한 -->
+   <select id="listUsrMnuAtrt" resultType="kr.happyjob.study.login.model.UsrMnuAtrtModel">
+         /*kr.kosmo.jobkorea.login.dao.LoginDao.listUsrMnuAtrt*/
+            SELECT  ta.mnu_id
+                  ,   ta.hir_mnu_id
+                  ,   ta.mnu_nm
+                  ,   ta.mnu_url
+                  ,   ta.mnu_dvs_cod
+                  ,   ta.grp_num
+                  ,   ta.odr
+                  ,   ta.lvl
+                  ,   ta.mnu_ico_cod
+<!--                   ,   ta.use_poa
+                  ,   ta.dlt_poa -->
+               FROM  tm_mnu_mst ta
+               WHERE EXISTS (
+                             SELECT  1
+                             FROM  tn_usr_mnu_atrt tb
+                             WHERE ta.mnu_id = tb.mnu_id
+                                  AND tb.user_type = #{userType}
+                           )
+                  AND ta.lvl=0
+               ORDER BY ta.odr
+     </select>
+     
+     <!-- 사용자 자식 메뉴 권한 -->
+   <select id="listUsrChildMnuAtrt" resultType="kr.happyjob.study.login.model.UsrMnuChildAtrtModel">
+      /*kr.kosmo.jobkorea.login.dao.LoginDao.listUsrChildMnuAtrt*/
+         SELECT  ta.mnu_id
+               ,   ta.hir_mnu_id
+               ,   ta.mnu_nm
+               ,   ta.mnu_url
+               ,   ta.mnu_dvs_cod
+               ,   ta.grp_num
+               ,   ta.odr
+               ,   ta.lvl
+               ,   ta.use_poa
+               ,   ta.dlt_poa
+         FROM  tm_mnu_mst ta
+         WHERE EXISTS (
+                          SELECT  1
+                            FROM  tn_usr_mnu_atrt tb
+                          WHERE ta.mnu_id = tb.mnu_id
+                               AND tb.user_type = #{userType}
+                     )
+            AND ta.lvl=1
+            AND hir_mnu_id = #{hir_mnu_id}
+         ORDER BY ta.odr
+     </select>
+     
+     <!-- 회원가입 -->
+     <insert id="registerUser" parameterType="java.util.Map">
+     /*kr.kosmo.jobkorea.login.dao.LoginDao.registerUser*/
+     INSERT INTO tb_userinfo (
+     							loginID
+     						,	user_type
+     						,	name
+     						,	password
+     						,	email_cop
+     						,	birthday
+     						,	gender_cd
+     						,	user_tel1
+     						,	user_tel2
+     						,	user_tel3
+     						,	user_zipcode
+     						,	user_address
+     						,	user_dt_address
+							,	consult_yn
+     						,	del_cd
+     						,	div_cd
+     						,	user_email
+     						,	user_company
+     						,	approval_cd
+     						,	salary
+     						,	career_yn
+     						,	career_mm
+     						,	singular_facts
+     						,	user_describe
+     						,	user_grade
+     						,	user_hope_area1
+     						,	user_hope_area2
+     						,	user_hope_area3
+     						,	user_contents
+     						,	user_hope_work
+     						) VALUES (
+     								#{loginID}
+								,	#{user_type}
+								,	#{name}  
+								,	#{password}  
+								,	#{email_cop}
+								,	#{birthday}    
+								,	#{gender_cd}  
+								,	#{user_tel1}  
+								,	#{user_tel2}  
+								,	#{user_tel3}  
+								,	#{user_zipcode}  
+								,	#{user_address}  
+								,	#{user_dt_address}
+								,	#{consult_yn}					
+								,	#{del_cd}
+								,	#{div_cd}    	
+								,	#{user_email}  
+								,	#{user_company}		
+								,	#{approval_cd}			
+     							,	#{salary}								
+								,	#{career_yn}								
+								,	#{career_mm}
+	     						,	#{singular_facts}
+								,	#{user_describe}
+	     						,	#{grade}
+	     						,	#{area1}
+	     						,	#{area2}
+	     						,	#{area3}
+	     						,	#{user_contents}
+	     						,	#{user_hope_work}
+     						)
+     
+     
+     </insert>
+     
+     <!-- 유저전문기술(tb_userskill 테이블에 따로 저장) -->
+<!--      <insert id="registerUserSkill" parameterType="java.util.Map">
+     INSERT INTO tb_userskill (
+     							
+     						VALUES (
+     							
+								
+     						)
+     
+     
+     </insert>
+      -->
+
+     
+     <!-- 중복 검사  loginID 중복검사 -->
+	<select id="check_loginID" parameterType="String" resultType="int">
+		SELECT count(*)
+		FROM tb_userinfo
+		WHERE loginID = #{loginID}
+	</select>
+	
+	
+	<!-- 회원가입 이메일 중복 검사  -->
+	<select id="check_email" parameterType="String" resultType="int">
+		SELECT count(*)
+		FROM tb_userinfo
+		WHERE user_email = #{user_email}
+	</select>
+	
+     <!-- 사용자 ID 찾기 -->
+      <select id="selectFindId" resultType="kr.happyjob.study.login.model.LgnInfoModel">
+      /*kr.happyjob.study.login.dao.LoginDao.selectFindId*/
+      SELECT  u.loginID as loginID
+      	  ,	  u.user_email as user_email
+      FROM    tb_userinfo as u
+      WHERE   u.del_cd ="n"
+      AND	  u.user_email = #{user_email}
+     </select>
+
+      
+     <!-- 사용자 PW 찾기 -->
+     <select id="selectFindPw" resultType="kr.happyjob.study.login.model.LgnInfoModel">
+      /*kr.happyjob.study.login.dao.LoginDao.selectFindPw*/
+      SELECT  u.loginID as loginID
+      	  ,   u.password as password
+      	  ,	  u.user_email as user_email
+      FROM    tb_userinfo as u
+      WHERE   u.del_cd ="n"
+      AND	  u.user_email = #{user_email}
+      AND 	  u.loginID = #{loginID}
+     </select>
+
+     
+     <!-- 사용자 PW 찾기 ID 체크-->
+     <select id="registerIdCheck" resultType="kr.happyjob.study.login.model.LgnInfoModel">
+     SELECT     u.loginID as loginID
+     FROM    	tb_userinfo as u
+     WHERE   	u.del_cd ="n"
+     AND 	  	u.loginID = #{loginID}
+     </select>  
+     
+     
+     <!-- 이력서 파일 업로드 -->
+     <insert id="insertUserinfoFile">
+	     insert into tb_userinfoFile (
+			  uf_title,uf_contents,uf_cnt,file_nm,file_loc,file_size,enr_user,enr_date,upd_user,upd_date
+			)select
+			  ,#{uf_title}  <!-- qna_title - IN varchar(50) -->
+			  ,#{uf_contents}   <!-- qna_contents - IN varchar(50)-->
+			  ,0    <!-- qna_cnt - IN int(11) -->
+			  ,#{fileInfo.file_nm}   <!-- file_nm - IN varchar(50) -->
+			  ,#{fileInfo.file_loc}  <!--  file_loc - IN varchar(50) -->
+			  ,#{fileInfo.file_size}   <!-- file_size - IN varchar(50) -->
+			  ,#{enr_user}   <!-- enr_user - IN varchar(20) -->
+			  ,DATE_FORMAT(NOW(),'%Y-%c-%d %T' )  <!--  enr_date - IN date -->
+			  ,#{upd_user}   <!-- upd_user - IN varchar(20) -->
+			  ,DATE_FORMAT(NOW(),'%Y-%c-%d %T' )   <!--  upd_date - IN date -->
+			from tb_userinfoFile
+	</insert>
+	
+	<select id="getDirectory" resultType="String">
+		select concat('F', date_format(now(),'%y%m%d')) AS dirPath
+	</select>
+	
+	<update id="updateUserinfoFile">
+		update tb_userinfoFile SET
+		   qna_title = #{qna_title} <!-- varchar(50) -->
+		  ,qna_contents =  concat(DATE_FORMAT(NOW(),'%Y-%c-%d %T' ),'- 수정됨 \n',#{qna_contents}) <!-- varchar(50) -->
+		  ,file_nm = #{file_nm} <!-- varchar(50) -->
+		  ,file_loc = #{file_loc}  <!--  varchar(50) -->
+		  ,file_size = #{file_size}  <!-- varchar(50) -->
+		  ,upd_user = #{loginID} <!-- varchar(20) -->
+		  ,upd_date = DATE_FORMAT(NOW(),'%Y-%c-%d %T' )  <!-- date -->
+		WHERE qna_seq = #{qna_seq} <!--  varchar(20) -->
+	
+	</update>
+
+</mapper>

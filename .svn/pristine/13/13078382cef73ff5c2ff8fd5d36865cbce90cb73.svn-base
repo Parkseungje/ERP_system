@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.dashboard.dao.DashboardDao">
+	
+	<select id="cntEngineer" resultType="int">
+		/*kr.kosmo.jobkorea.system.dao.DashboardDao.cntEngineer*/
+		SELECT COUNT(loginID)
+		FROM 	tb_userinfo
+		WHERE	user_type = 'B'
+	</select>	
+	
+	<select id="cntCompany" resultType="int">
+		/*kr.kosmo.jobkorea.system.dao.DashboardDao.cntCompany*/
+		SELECT COUNT(loginID)
+		FROM 	tb_userinfo
+		WHERE	user_type = 'C'
+	</select>	
+	
+	<select id="cntProject" resultType="int">
+		/*kr.kosmo.jobkorea.system.dao.DashboardDao.cntProject*/
+		SELECT COUNT(pro_no)
+		FROM 	tb_prolist
+		<!-- WHERE	reg_date <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')  --> 
+	</select>	
+	
+	<!-- 
+	<select id="cntApplicant" resultType="int">
+		/*kr.kosmo.jobkorea.system.dao.DashboardDao.cntApplicant*/
+		SELECT COUNT(p.loginID)
+		FROM 	tb_prolist p, tb_consupport cs
+		WHERE	reg_date <![CDATA[<=]]> STR_TO_DATE(#{reg_date}, '%Y-%m-%d') 
+	</select>
+	 -->
+	 
+</mapper>

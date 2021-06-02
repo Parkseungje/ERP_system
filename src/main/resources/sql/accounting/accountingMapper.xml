@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.accounting.dao.AcctitleDao">
+
+	<select id="acctitle" resultType="kr.happyjob.study.accounting.model.AcctitleModel">
+		select gc.group_code, 
+		       gc.group_name,
+		       ac.detail_account_cd,
+		       ac.detail_account_nm,
+		       ac.use_yn,
+		       ac.note,
+		       (select dc.detail_name from tb_detail_code dc where dc.group_code = 'REVEXPcd' and dc.detail_code = ac.account_type) as account_type
+         from tb_account ac left join tb_group_code gc   
+                       on gc.group_code = ac.account_cd      
+        <where>
+		     <if test="(bigSelect != null) and (!bigSelect.equals(''))">
+				and gc.group_code = #{bigSelect}	
+			 </if>
+		     <if test="(accsmall != null) and (!accsmall.equals(''))">
+				and ac.detail_account_cd = #{accsmall}	
+			 </if>
+		     <if test="(payment != null) and (!payment.equals(''))">
+				and ac.account_type = #{payment}	
+			 </if>			 
+		     <if test="(use != null) and (!use.equals(''))">
+				and ifnull(ac.use_yn,'N') = #{use}	
+			 </if>	
+	 	</where>
+	   LIMIT #{pageIndex}, #{pageSize}	   
+	</select>
+
+	<insert id="acctitleWrite">
+	    <selectKey resultType="string" keyProperty="detail_account_cd" order="BEFORE">
+            SELECT lpad(cast((IFNULL(MAX(cast(detail_account_cd as unsigned)),0) + 1) as char),3,'0') 
+              FROM tb_account
+             where account_cd = #{bigSelect2}
+        </selectKey> 
+		insert into tb_account (
+					 account_cd
+					,detail_account_cd
+					,detail_account_nm
+					,note
+					,account_type
+					,use_yn
+		) values  ( 
+					 #{bigSelect2}
+					,#{detail_account_cd}
+					,#{accSmall2}
+					,#{accContents2}
+					,#{payment2}
+					,'Y'
+		)
+	</insert>
+	
+	<select id="acctitleUpdateSelect" resultType="kr.happyjob.study.accounting.model.AcctitleModel">
+		select gc.group_code, 
+		       gc.group_name,
+		       ac.detail_account_cd,
+		       ac.detail_account_nm,
+		       ac.use_yn,
+		       ac.note,
+		       (select dc.detail_name from tb_detail_code dc where dc.group_code = 'REVEXPcd' and dc.detail_code = ac.account_type) as account_type,
+		        (select dc.detail_code from tb_detail_code dc where dc.group_code = 'REVEXPcd' and dc.detail_code = ac.account_type) as account_type_cd
+         from tb_account ac left join tb_group_code gc   
+                       on gc.group_code = ac.account_cd      
+	     where gc.group_code = #{group_code}
+		   and ac.detail_account_cd = #{detail_account_cd}	
+	</select>
+	
+	<update id="acctitleUpdate">
+		UPDATE tb_account
+		   SET detail_account_nm = #{accSmall}, 
+			   note = #{accContents},
+			   use_yn = #{use_yn},
+			   account_type = #{account_type}
+	    where account_cd = #{account_cd}
+		  and detail_account_cd = #{accSmall_cd}	
+	</update>
+	
+	
+</mapper>
+

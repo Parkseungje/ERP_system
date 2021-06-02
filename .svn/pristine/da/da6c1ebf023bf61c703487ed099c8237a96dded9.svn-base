@@ -1,0 +1,68 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>					
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+						   
+							<c:if test="${histCnt eq 0 }">
+								<tr>
+									<td colspan="9">데이터가 존재하지 않습니다.</td>
+								</tr>
+							</c:if>
+<%-- 							<c:if test="${currentPage > 0 }"> --%>
+						<%-- 		<c:set var="nRow" value="${pageSize*(currentPageComnGrpCod-1)}" /> --%>
+					<c:forEach items="${payHistList}" var="list">
+							<tr>
+										<!--   클릭 -> 모달창 (수정,삭제 같은거 할 수 있는 )-->
+										<%-- <td><a href="javascript:fListComnDtlCod( 1,  '${list.nat_ps}')">${list.nat_ps}</a></td> --%>
+								<th>연봉</th>
+								<td>${list.year_salary}</td>
+							</tr>
+							
+							<tr>
+								<th>기본급</th>
+								<td>${list.salary}</td>
+							</tr>    
+							                                            
+							<tr>
+								<th>국민연금</th>
+								<td>${list.nat_ps}</td>
+							</tr>
+							
+							<tr>
+								<th>건강보험료</th>
+								<td>${list.h_insure}</td>
+							</tr>
+							
+							<tr>
+								<th>고용보험료</th>
+								<td>${list.e_insure}</td>
+							</tr>
+							
+							<tr>
+								<th>산재보험료</th>
+								<td>${list.ohs_insure}</td>
+							</tr>
+							
+							<tr>
+								<th>비고금액</th>
+								<td>${list.nat_ps}</td>
+							</tr>
+							
+							<tr>
+								<th>실수령액</th>
+								<td>${list.nat_ps}</td>
+							</tr>
+					</c:forEach>
+
+							<%-- 			<td><fmt:formatDate value="${list.fst_enlm_dtt}" pattern="yyyy-MM-dd" /></td>
+										 --%>
+							<%-- 			
+										<td>
+											<a class="btnType3 color1" href="javascript:fPopModalComnGrpCod('${list.grp_cod}');"><span>수정</span></a>
+										</td>
+									</tr>
+									<c:set var="nRow" value="${nRow + 1}" />
+								</c:forEach>
+							</c:if>
+							
+							<input type="hidden" id="totalCntComnGrpCod" name="totalCntComnGrpCod" value ="${totalCntComnGrpCod}"/> --%>

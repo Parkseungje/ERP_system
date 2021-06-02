@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.sales.dao.IyyRevenueDao">
+<!-- <![CDATA[>]]> 사용 -->
+
+	<!-- 사용자 기간 입력
+	년도별 손익통계 조회 -->	
+	<select id="listYSalesUI" resultType="kr.happyjob.study.sales.model.SalesModel">
+		SET @prev_sales:=0;
+		SET @prev_profit:=0;
+		SELECT order_date 
+		       ,ROUND(100 * CASE @prev_sales WHEN 0 THEN 0
+		             ELSE (sum_sales - @prev_sales) / ABS(@prev_sales) 
+		             END,0) as sales_growth  
+		       ,ROUND(100 * CASE @prev_profit WHEN 0 THEN 0
+		             ELSE (net_profit - @prev_profit) / ABS(@prev_profit)
+		             END,0) as profit_growth 
+		       ,(@prev_sales := sum_sales)/100000 as sum_sales 
+		       ,(@prev_profit := net_profit)/100000 as net_profit 
+		       ,salary_cost/100000 as salary_cost
+		       ,etc_cost/100000 as etc_cost
+		       ,sales_profit/100000 as sales_profit
+		from (
+		      select order_date 
+		             ,sum_sales-sum_cost-sales_cost-salary_cost-etc_cost as net_profit
+		             ,sum_sales 
+		             ,salary_cost 
+		             ,etc_cost 
+		             ,sum_sales-sum_cost-sales_cost as sales_profit 
+		             
+		        from (
+		              select date_format(occur_date,'%Y') as order_date  
+		                   ,ifnull(sum(case when detail_account_cd in('102','201') then amt end),0) as sum_sales 
+		                   ,ifnull(sum(case when detail_account_cd='101' then amt end),0) as sum_cost 
+		                   ,ifnull(sum(case when account_cd='E500' then amt end),0) as sales_cost 
+		                   ,ifnull(sum(case when account_cd='C300' then amt end),0) as salary_cost 
+		                   ,ifnull(sum(case when account_cd in ('D400','F600') then amt end),0) as etc_cost 
+		              from tb_acc_slip
+		            group by order_date
+		            having order_date between #{fromDate} and #{toDate}
+		        ) temp
+		        order by order_date
+		      ) ysum
+
+	</select>
+	
+	<!-- 년도별매출현황(상하반기) 차트
+		년도별 온라인/오프라인 주문건수,매출,영업이익,영업이익률-->
+	<select id="listYSalesHalf" resultType="kr.happyjob.study.sales.model.SalesModel">
+		select order_date 
+		       ,on_num
+		       ,off_num
+		       ,on_sales/100000  as on_sales
+		       ,off_sales/100000 as off_sales
+		       ,sales_profit/100000 as sales_profit 
+		       ,round(sales_profit/sum_sales*100,2) as salesProfit_rate 
+		  from (
+		          select date_form as order_date 
+		                 ,sum(on_num) as on_num 
+		                 ,sum(off_num) as off_num 
+		                 ,sum(on_sales) as on_sales 
+		                 ,sum(off_sales) as off_sales 
+		                 ,sum(on_sales)+sum(off_sales) as sum_sales 
+		                 ,sum(on_sales)+sum(off_sales)-sum(sum_cost)-sum(sales_cost) as sales_profit  
+		            from (
+		                  select date_format(occur_date,'%Y-%m') as order_date  
+		                         ,concat(DATE_FORMAT(occur_date,'%Y '),if(QUARTER(occur_date) IN (1,2),'상반기','하반기')) as date_form
+		                         ,count(case when detail_account_cd='102' then 1 end) as on_num 
+		                         ,count(case when detail_account_cd='201' then 1 end) as off_num 
+		                         ,ifnull(sum(case when detail_account_cd in('102') then amt end),0) as on_sales 
+		                         ,ifnull(sum(case when detail_account_cd in('201') then amt end),0) as off_sales
+		                         ,ifnull(sum(case when detail_account_cd='101' then amt end),0) as sum_cost 
+		                         ,ifnull(sum(case when account_cd='E500' then amt end),0) as sales_cost
+		                    from tb_acc_slip
+		                   where date_format(occur_date,'%Y') between #{fromDate} and #{toDate}
+		                   group by order_date
+		                  ) temp
+		          group by date_form
+		        ) msum
+	
+	</select>
+	
+	<!-- 년도매출현황(1-4분기) 차트
+		년도 온라인/오프라인 주문건수,매출,영업이익,영업이익률-->
+	<select id="listYSalesQuart" resultType="kr.happyjob.study.sales.model.SalesModel">
+		select date_form as order_date 
+		       ,sum(on_num) as on_num 
+		       ,sum(off_num) as off_num 
+		       ,sum(on_sales)/100000 as on_sales
+		       ,sum(off_sales)/100000 as off_sales 
+		       ,sum(sum_sales-sum_cost-sales_cost)/100000 as sales_profit 
+		       ,round(sum(sum_sales-sum_cost-sales_cost)/sum(sum_sales)*100,0) as salesProfit_rate
+		  from (
+		        select date_format(occur_date,'%Y-%m') as order_date  
+		               ,concat(SUBSTRING(DATE_FORMAT(occur_date,'%Y '),3,2),'.',QUARTER(occur_date),'Q') as date_form
+		               ,count(case when detail_account_cd='102' then 1 end) as on_num 
+		               ,count(case when detail_account_cd='201' then 1 end) as off_num 
+		               ,ifnull(sum(case when detail_account_cd='102' then amt end),0) as on_sales 
+		               ,ifnull(sum(case when detail_account_cd='201' then amt end),0) as off_sales
+		               ,ifnull(sum(case when detail_account_cd in('102','201') then amt end),0) as sum_sales 
+		               ,ifnull(sum(case when detail_account_cd='101' then amt end),0) as sum_cost 
+		               ,ifnull(sum(case when account_cd='E500' then amt end),0) as sales_cost 
+		          from tb_acc_slip
+		         where date_format(occur_date,'%Y') between #{fromDate} and #{toDate}
+		               and ((account_cd like 'A%' and detail_account_cd in('101','102'))
+		               or (account_cd like 'B%' and detail_account_cd='201')
+		                   or account_cd like 'E%')
+		      group by date_format(occur_date,'%Y-%m')
+		        ) msum
+		group by date_form      
+		order by date_form
+
+
+	</select>
+	
+
+</mapper>

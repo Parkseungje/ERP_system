@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.sales.dao.IddRevenueDao">
+<!-- <![CDATA[>]]> 사용 -->
+
+	<!-- 검색날짜 매출 목록 총 갯수 조회 -->	
+	<select id="countListddRevenue" resultType="int">
+		  select count(*)
+		   from tb_order od
+		        left join tb_scm_product pr
+		                  ON pr.product_cd = od.product_cd
+		        left join (
+		                  select ui.loginID
+		                         ,sc.company_cd as on_client_cd
+		                         ,ui.name as on_client_nm
+		                  from tb_userinfo ui, tb_scm_userinfo sc
+		                  where ui.loginID = sc.loginID
+		                  ) onu
+		                  on onu.loginID = od.loginID  
+		        left join (
+		                   select ri.receive_num
+		                          ,ri.loginID
+		                          ,ri.client_cd as off_client_cd
+		                          ,ec.client_nm as off_client_nm
+		                     from tb_erp_client ec, tb_receive_info ri
+		                    where ec.client_cd = ri.client_cd
+		                   ) ofu
+		                   on ofu.receive_num = od.order_cd
+		  where date_format(od.order_date,'%Y-%m-%d') = #{searchDate}
+		        and od.deposit_yn='y'
+    	  <if test="searchKey!=null and !searchKey.equals('')">
+    	 		 and (on_client_cd = #{searchKey} or off_client_cd=#{searchKey})
+		  </if>
+			       	   
+	</select>
+	
+	<!-- 검색날짜 매출 목록 조회 -->
+	<select id="listDSales" resultType="kr.happyjob.study.sales.model.SalesModel">
+		select date_format(od.order_date,'%Y-%m-%d') as order_date
+		        ,(case
+		          when od.offline='n' then '온라인'
+		          when od.offline='y' then '오프라인' 
+		          end
+		        ) as state_nm  
+		        ,(case
+		          when od.offline='n' then on_client_cd
+		          when od.offline='y' then off_client_cd 
+		          end
+		        ) as client_cd
+		        ,(case
+		          when od.offline='n' then on_client_nm
+		          when od.offline='y' then off_client_nm 
+		          end
+		        ) as client_nm 
+		        ,pr.prod_nm 
+		        ,od.order_cnt
+		        ,od.order_cnt*pr.purchase_price as purchase_price 
+		        ,od.amount as sale_price
+		        ,od.tax as tax 
+		        ,od.amount+od.tax as pay_price
+		   from tb_order od
+		        left join tb_scm_product pr
+		                  ON pr.product_cd = od.product_cd
+		        left join (
+		                  select ui.loginID
+		                         ,sc.company_cd as on_client_cd
+		                         ,ui.name as on_client_nm
+		                  from tb_userinfo ui, tb_scm_userinfo sc
+		                  where ui.loginID = sc.loginID
+		                  ) onu
+		                  on onu.loginID = od.loginID  
+		        left join (
+		                   select ri.receive_num
+		                          ,ri.loginID
+		                          ,ri.client_cd as off_client_cd
+		                          ,ec.client_nm as off_client_nm
+		                     from tb_erp_client ec, tb_receive_info ri
+		                    where ec.client_cd = ri.client_cd
+		                   ) ofu
+		                   on ofu.receive_num = od.order_cd
+		  where date_format(od.order_date,'%Y-%m-%d') = #{searchDate}
+		        and od.deposit_yn='y'
+		  <if test="searchKey!=null and !searchKey.equals('')">
+		  		and (on_client_cd = #{searchKey} or off_client_cd=#{searchKey})
+		  </if>
+		  LIMIT #{pageIndex}, #{pageSize}
+ 
+	</select>	
+	
+	<!-- 검색날짜 손익통계 -->
+	<select id="listDaySalesSum" resultType="kr.happyjob.study.sales.model.SalesModel">
+	
+	select order_date
+	       ,sum_sales
+	       ,sum_ar 
+	       ,sum_cost 
+	       ,sum_sales-sum_cost as margin 
+	       ,round((sum_sales-sum_cost)/sum_sales*100,2) as salesProfit_rate 
+	       
+	  from (
+	        select date_format(sl.occur_date,'%Y-%m-%d') as order_date  
+	               ,sum(case when acc.detail_account_cd in('102','201') then sl.amt end) as 'sum_sales' 
+	               ,ifnull(sum(case when acc.detail_account_cd='101' then sl.amt end),0) as 'sum_cost' 
+	               ,ifnull((select sum(amount)
+	                  from tb_order
+	                 where deposit_yn='n'
+	                       and date_format(order_date,'%Y-%m-%d')='2021-05-20'
+	              group by date_format(order_date,'%Y-%m-%d')
+	               ),0) as sum_ar  
+	          from tb_acc_slip sl
+	               join tb_account acc
+	                         on sl.account_cd = acc.account_cd
+	                         and sl.detail_account_cd = acc.detail_account_cd
+	         where date_format(sl.occur_date,'%Y-%m-%d')=#{searchDate}
+	         group by date_format(sl.occur_date,'%Y-%m-%d')
+	        ) dsum	
+	
+
+	
+	</select>
+	
+	
+	<!-- 검색날짜 기준 한달간 매출 시각화-->
+	<select id="listDaySalesChart" resultType="kr.happyjob.study.sales.model.SalesModel">
+		set @va=0;
+		select order_date 
+		       ,sum_sales/100000 as sum_sales
+		       ,(@va:=@va+sum_sales)/100000 as cumsum_sales  
+		  from (
+		        select date_format(occur_date,'%Y-%m-%d') as order_date  
+		               ,ifnull(sum(case when detail_account_cd in('102','201') then amt end),0) as sum_sales 
+		          from tb_acc_slip
+		         where date_format(occur_date,'%Y-%m-%d') between #{oneMonthAgo} and #{searchDate}
+		         group by order_date
+		         order by order_date
+		        ) d
+
+		        
+	</select>
+	
+	
+	
+	
+
+	
+</mapper>

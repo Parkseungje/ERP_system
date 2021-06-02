@@ -1,0 +1,158 @@
+package kr.happyjob.study.employee.model;
+
+import java.util.Date;
+
+public class EmpTaModel {
+	
+	//tb_userInfo table에서 가져오는 정보들
+	private String loginID; //사용자 ID == 사원번호
+	private String user_type; //사용자구분 == 직무
+	private String name; //사원명
+	private String tel; //연락처
+	
+	//tb_emp table에서 가져오는 정보들
+	private String entry_date; //입사일
+	private String retire_date; //퇴사일
+	private int dept_cd; //부서코드 -> tb_dept table에서 가져오는 정보 join해서 부서명 가져와야함.
+	private int total_al; //총연차 -> tb_ta_mgt table과 연관된 정보
+	private int use_al; //사용연차 -> tb_ta_mgt table과 연관된 정보
+	private String poscd; //직급코드 -> 공통코드table
+	
+	//tb_ta_mgt
+	private String ta_app_nm;
+	private int ta_yn;
+	private  String ta_reg_date;
+	private  String kind_hol;
+	private  String reason_hol;
+	private  String start_date;
+	private  String end_date;
+	private int h_cnt;
+	private  String can_reason;
+	
+	
+	
+	//getter, setter
+	public String getLoginID() {
+		return loginID;
+	}
+	public void setLoginID(String loginID) {
+		this.loginID = loginID;
+	}
+	public String getUser_type() {
+		return user_type;
+	}
+	public void setUser_type(String user_type) {
+		this.user_type = user_type;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getTel() {
+		return tel;
+	}
+	public void setTel(String tel) {
+		this.tel = tel;
+	}
+	public String getEntry_date() {
+		return entry_date;
+	}
+	public void setEntry_date(String entry_date) {
+		this.entry_date = entry_date;
+	}
+	public String getRetire_date() {
+		return retire_date;
+	}
+	public void setRetire_date(String retire_date) {
+		this.retire_date = retire_date;
+	}
+	public int getDept_cd() {
+		return dept_cd;
+	}
+	public void setDept_cd(int dept_cd) {
+		this.dept_cd = dept_cd;
+	}
+	public int getTotal_al() {
+		return total_al;
+	}
+	public void setTotal_al(int total_al) {
+		this.total_al = total_al;
+	}
+	public int getUse_al() {
+		return use_al;
+	}
+	public void setUse_al(int use_al) {
+		this.use_al = use_al;
+	}
+	public String getPoscd() {
+		return poscd;
+	}
+	public void setPoscd(String poscd) {
+		this.poscd = poscd;
+	}
+	private int ta_no;
+	public int getTa_no() {
+		return ta_no;
+	}
+	public void setTa_no(int ta_no) {
+		this.ta_no = ta_no;
+	}
+	public String getTa_app_nm() {
+		return ta_app_nm;
+	}
+	public void setTa_app_nm(String ta_app_nm) {
+		this.ta_app_nm = ta_app_nm;
+	}
+	public int getTa_yn() {
+		return ta_yn;
+	}
+	public void setTa_yn(int ta_yn) {
+		this.ta_yn = ta_yn;
+	}
+	public String getTa_reg_date() {
+		return ta_reg_date;
+	}
+	public void setTa_reg_date(String ta_reg_date) {
+		this.ta_reg_date = ta_reg_date;
+	}
+	public String getKind_hol() {
+		return kind_hol;
+	}
+	public void setKind_hol(String kind_hol) {
+		this.kind_hol = kind_hol;
+	}
+	public String getReason_hol() {
+		return reason_hol;
+	}
+	public void setReason_hol(String reason_hol) {
+		this.reason_hol = reason_hol;
+	}
+	public String getStart_date() {
+		return start_date;
+	}
+	public void setStart_date(String start_date) {
+		this.start_date = start_date;
+	}
+	public String getEnd_date() {
+		return end_date;
+	}
+	public void setEnd_date(String end_date) {
+		this.end_date = end_date;
+	}
+	public int getH_cnt() {
+		return h_cnt;
+	}
+	public void setH_cnt(int h_cnt) {
+		this.h_cnt = h_cnt;
+	}
+	public String getCan_reason() {
+		return can_reason;
+	}
+	public void setCan_reason(String can_reason) {
+		this.can_reason = can_reason;
+	}
+
+	
+}

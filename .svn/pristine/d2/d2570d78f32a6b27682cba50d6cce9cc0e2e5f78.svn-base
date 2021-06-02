@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.accounting.dao.DvDao">
+	
+<!-- 지출결의서 리스트 조회 : 회계 총무 /관리자 -->
+	
+	<select id="listEmpDv" resultType = "kr.happyjob.study.accounting.model.DvModel">
+			SELECT
+           		 ai.dv_no            	<!-- 결의번호 -->
+			   , gc.group_name			<!-- 계정대분류명 -->
+			   , ai.detail_account_nm	<!-- 상세분류명 -->
+			   , ai.acc_name			<!-- 거래처명 -->
+			   , ai.dv_reg_date			<!-- 신청일자 -->
+			   , ai.dv_use_date			<!-- 사용일자 -->
+         	   , ai.dv_amt				<!-- 지출금액 -->
+			   , ai.dv_app_yn			<!-- 승인여부 -->
+			   , ai.dv_app_date			<!-- 승인일자 -->
+			   , ai.dv_app_nm			<!-- 승인자 -->
+
+          FROM           
+            (  	select
+              		di.dv_no
+			      , di.loginID
+			      , di.dv_reg_date
+			      , di.dv_use_date
+			      , ac.account_cd
+			      , ac.detail_account_cd
+			      , ac.detail_account_nm
+            	  , di.dv_amt
+			      , di.dv_app_yn
+			      , di.dv_app_date
+			      , di.dv_app_nm
+			      , di.dv_memo
+			      , di.acc_name
+			 
+		          FROM tb_dv_info di inner join tb_account ac
+              	  on di.account_cd = ac.account_cd
+                  and di.detail_account_cd = ac.detail_account_cd
+          		) ai inner join tb_group_code gc on ai.account_cd = gc.group_code		
+				  
+		LIMIT #{pageIndex}, #{pageSize}
+	
+	</select>
+
+<!-- 지출결의서 갯수 조회 : 회계 총무 / 관리자 -->
+
+	<select id="countListEmpDv" resultType="int">
+		SELECT COUNT(1) AS tot_cnt FROM tb_dv_info
+	</select>
+
+<!-- 지출결의서 단건 조회(모달)  : 회계 총무 / 관리자-->
+	<select id="selectEmpDv" resultType = "kr.happyjob.study.accounting.model.DvModel">
+			SELECT
+           		 ai.dv_no				<!-- 결의번호 -->	
+			   , ai.loginId				<!-- 아이디 -->
+			   , gc.group_name			<!-- 계정대분류명 -->
+			   , ai.detail_account_nm	<!-- 상세분류명 -->
+			   , ai.acc_name			<!-- 거래처명 -->
+			   , ai.dv_reg_date			<!-- 신청일자 -->
+			   , ai.dv_use_date			<!-- 사용일자 -->
+         	   , ai.dv_amt				<!-- 지출금액 -->			
+			   , ai.dv_memo				<!-- 비고 -->
+			   , ai.dv_return			<!-- 반려사유 -->
+			   , ai.att_filename		<!-- 파일이름 -->
+			   , ai.att_filepath		<!-- 파일경로 -->
+			   , ai.att_filesize		<!-- 파일사이즈 -->
+			   
+          FROM           
+            (  	select
+              		di.dv_no
+			      , di.loginID
+			      , di.dv_reg_date
+			      , di.dv_use_date
+			      , ac.account_cd
+			      , ac.detail_account_cd
+			      , ac.detail_account_nm
+            	  , di.dv_amt
+			      , di.dv_memo
+			      , di.dv_return
+			      , di.att_filename
+			      , di.att_filepath
+			      , di.att_filesize
+			      , di.acc_name
+			 
+		          FROM tb_dv_info di inner join tb_account ac
+              	  on di.account_cd = ac.account_cd
+                  and di.detail_account_cd = ac.detail_account_cd
+          	) ai inner join tb_group_code gc on ai.account_cd = gc.group_code		
+			  where ai.dv_no = #{dv_no}	
+</select>
+
+
+</mapper>
+

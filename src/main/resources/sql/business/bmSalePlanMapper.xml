@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.business.dao.BmSalePlanDao">
+	
+	<!-- 영업실적 리스트 조회 -->
+	
+	<select id="listBmSalePlan" resultType = "kr.happyjob.study.business.model.BmSalePlanModel">
+			
+	select     
+    	
+    	  STR_TO_DATE(spro.sales_reg_date,'%Y%m%d') as sales_reg_date  					<!-- 계획등록일 -->			
+    	, spro.manufacturer																<!-- 제조업체 -->
+    	, spro.large_classifi															<!-- 제품대분류코드 -->
+    	, spro.small_classifi															<!-- 제품중분류코드 -->
+    	, spro.product_cd																<!-- 제품코드 -->
+    	, spro.goal_amt																	<!-- 목표수량 -->
+    	, spro.memo																		<!-- 비고 -->
+    	, ifnull((SELECT(ROUND((rc.estimate_cnt/spro.goal_amt) * 100))),0) as a_rate	<!-- 달성률 -->
+    	, ifnull(rc.estimate_cnt,0)	as estimate_cnt										<!-- 실적수량 -->				
+    	, spro.loginID																	<!-- 로그인 아이디 -->
+    	, sr.prod_nm    																<!-- 제품명 -->	
+    	, sr.m_ct_nm																	<!-- 제품대분류명 -->
+    	, sr.l_ct_nm																	<!-- 제품중분류명 -->
+    	
+        from tb_sales_pro spro left outer join       
+        (
+          select 
+              ri.loginID                               -- 수주정보 / 수주제품정보 테이블 조인
+            , ri.receive_date  
+            , rp.receive_num
+            , sum(rp.estimate_cnt) as estimate_cnt
+            , rp.product_cd
+              from receive_prod rp
+              inner join tb_receive_info ri 
+              on rp.receive_num = ri.receive_num
+              group by ri.loginID, ri.receive_date, rp.product_cd 
+        ) rc
+          on spro.loginID = rc.loginID  
+          and  DATE_FORMAT(rc.receive_date,'%Y%m%d') = spro.sales_reg_date
+          and rc.product_cd = spro.product_cd
+      left outer join  
+        (
+          select 
+              sp.product_cd
+            , sp.prod_nm    
+            , scmC.m_ct_nm
+            , scmC.m_ct_cd
+            , scmC.l_ct_nm
+            , scmC.l_ct_cd
+              from
+              (select 
+              		  scmMc.m_ct_nm
+              		, scmMc.m_ct_cd
+              		, scmLc.l_ct_nm
+              		, scmLc.l_ct_cd
+                  	from tb_scm_l_category scmLc 
+                  	inner join tb_scm_m_category scmMc      -- 대분류/ 중분류 정보 테이블 조인
+                  	on scmLc.l_ct_cd = scmMc.l_ct_cd
+              ) scmC 
+                inner join tb_scm_product sp on sp.m_ct_cd = scmC.m_ct_cd      -- 제품정보 테이블과 조인
+        ) sr 
+             on spro.large_classifi = sr.l_ct_cd
+             and spro.small_classifi = sr.m_ct_cd
+             and spro.product_cd = sr.product_cd
+
+			<where>  
+				<choose>
+					<when test='(userType == "D") and (userType.equals("D"))'>
+			       		and spro.loginID = #{loginID}
+			    	</when>
+					<otherwise>
+			       		<if test="(loginID_header != null) and (!loginID_header.equals(''))">
+			       			and spro.loginID = #{loginID_header}	
+						</if>
+					</otherwise>
+				</choose>				
+				<if test="(large_classifi != null) and (!large_classifi.equals(''))">
+			       and spro.large_classifi = #{large_classifi}
+			    </if>
+			    <if test="(small_classifi != null) and (!small_classifi.equals(''))">
+			       and spro.small_classifi = #{small_classifi}	
+			    </if>
+			    <if test="(product_cd != null) and (!product_cd.equals(''))">
+			       and spro.product_cd = #{product_cd}
+			    </if>
+			    <if test="(sales_reg_date != null) and (!sales_reg_date.equals(''))">
+			       and CONCAT(substring(spro.sales_reg_date,1,4),"-",substring(spro.sales_reg_date,5,2),"-",substring(spro.sales_reg_date,7,2)) = #{sales_reg_date}	
+			    </if>
+			</where>
+		order by sales_reg_date desc, spro.goal_amt desc, a_rate desc
+		LIMIT #{pageIndex}, #{pageSize}
+		
+	</select>
+
+		<!-- 영업실적 갯수 조회  -->
+
+	<select id="countListBmSalePlan" resultType="int">
+		SELECT COUNT(1) AS tot_cnt FROM tb_sales_pro
+	<where>  
+				<choose>
+					<when test='(userType == "D") and (userType.equals("D"))'>
+			       		and loginID = #{loginID}
+			    	</when>
+					<otherwise>
+			       		<if test="(loginID_header != null) and (!loginID_header.equals(''))">
+			       			and loginID = #{loginID_header}	
+						</if>
+					</otherwise>
+				</choose>				
+				<if test="(large_classifi != null) and (!large_classifi.equals(''))">
+			       and large_classifi = #{large_classifi}
+			    </if>
+			    <if test="(small_classifi != null) and (!small_classifi.equals(''))">
+			       and small_classifi = #{small_classifi}	
+			    </if>
+			    <if test="(product_cd != null) and (!product_cd.equals(''))">
+			       and product_cd = #{product_cd}
+			    </if>
+			    <if test="(sales_reg_date != null) and (!sales_reg_date.equals(''))">
+			       and CONCAT(substring(sales_reg_date,1,4),"-",substring(sales_reg_date,5,2),"-",substring(sales_reg_date,7,2)) = #{sales_reg_date}	
+			    </if>
+			</where>
+	</select>
+
+
+</mapper>

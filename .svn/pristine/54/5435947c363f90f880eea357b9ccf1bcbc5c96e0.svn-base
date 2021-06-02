@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.sales.dao.ArmngDao">
+
+	<select id="armngtitle" resultType="kr.happyjob.study.sales.model.ArmngModel">
+select left(bb.receive_date,10) as receive_date, 
+       bb.order_cd, 
+       bb.product_cd, 
+       bb.total_amt as price, 
+       bb.scm_yn, 
+       ec.client_nm,
+       (select prod_nm from tb_scm_product where product_cd=bb.product_cd) as prod_nm,
+       bb.name,
+       bb.deposit_yn
+         from (
+                select  aa.receive_date,
+                         aa.order_cd , 
+                         aa.product_cd, 
+                         aa.total_amt, 
+                         aa.amount,
+                         aa.tax,
+                         aa.order_cnt,
+                         aa.deposit_yn, 
+                         aa.loginID, 
+                         aa.name, 
+                         aa.scm_yn,
+                         ri.client_cd
+                         
+                          from (
+                                 select od.order_date as receive_date,
+                                         od.order_cd, 
+                                         od.product_cd, 
+                                         (od.amount+od.tax) as total_amt,
+                                         od.amount,
+                                         od.tax,
+                                         od.order_cnt,
+                                         od.deposit_yn, 
+                                         od.loginID, 
+                                         ui.name, 
+                                          (
+                                           case
+                                           when od.offline like 'n' then 'scm부'
+                                           when od.offline like 'y' then '영업부'
+                                           end
+                                           ) as scm_yn
+                                 from tb_order od left join tb_userinfo ui on od.loginID = ui.loginID 
+                                 where od.deposit_yn='n' 
+                                ) aa
+                                left join tb_receive_info ri on aa.order_cd = ri.receive_num
+                 ) bb
+                 left join tb_erp_client ec on bb.client_cd=ec.client_cd
+			<where>
+				<if test="(receiveStart != null) and (!receiveStart.equals(''))">
+		   			and DATE_FORMAT(bb.receive_date,'%Y-%m-%d')<![CDATA[>=]]>STR_TO_DATE(#{receiveStart}, '%Y-%m-%d')
+		   		</if>
+		   		<if test="(receiveEnd != null) and (!receiveEnd.equals(''))">
+		   			and DATE_FORMAT(bb.receive_date,'%Y-%m-%d')<![CDATA[<=]]>STR_TO_DATE(#{receiveEnd}, '%Y-%m-%d')
+		   		</if>
+				<if
+					test="(receiveName != null) and (!receiveName.equals(''))">
+					AND  ec.client_nm LIKE CONCAT('%', #{receiveName}, '%')
+				</if>
+				<if
+					test="(scm_yn != null) and (!scm_yn.equals(''))">
+					AND bb.scm_yn = #{scm_yn}
+				</if>
+			</where> 
+			LIMIT #{pageIndex}, #{pageSize}	
+	</select>
+
+	<select id="armngSelect" resultType="kr.happyjob.study.sales.model.ArmngModel">
+select left(bb.order_date,10) as receive_date,  
+       bb.product_cd, 
+       bb.total_amt as price, 
+       bb.amount as unit_cost,
+       bb.tax,
+       bb.order_cnt as estimate_cnt,
+       bb.deposit_yn, 
+       bb.loginID, 
+       bb.name, 
+       bb.scm_yn, 
+       bb.client_cd,
+       bb.order_cd,
+       ec.client_nm,
+       ec.emp_nm,
+       ec.emp_hp,
+       (select prod_nm from tb_scm_product where product_cd=bb.product_cd) as prod_nm
+         from (
+                select  aa.order_date,
+                         aa.product_cd, 
+                         aa.total_amt, 
+                         aa.amount,
+                         aa.tax,
+                         aa.order_cnt,
+                         aa.deposit_yn, 
+                         aa.loginID, 
+                         aa.name, 
+                         aa.scm_yn,
+                         aa.order_cd,
+                         ri.client_cd
+                          from (
+                                 select od.order_date,
+                                         od.order_cd, 
+                                         od.product_cd, 
+                                         (od.amount+od.tax) as total_amt,
+                                         od.amount,
+                                         od.tax,
+                                         od.order_cnt,
+                                         od.deposit_yn, 
+                                         od.loginID,
+                                         ui.name, 
+                                          (
+                                           case
+                                           when od.offline like 'n' then 'scm부'
+                                           when od.offline like 'y' then '영업부'
+                                           end
+                                           ) as scm_yn
+                                 		from tb_order od left join tb_userinfo ui on od.loginID = ui.loginID 
+                                 where od.deposit_yn='n' and od.order_cd=#{order_cd}
+                                ) aa 
+                                left join tb_receive_info ri on aa.order_cd = ri.receive_num
+              ) bb left join tb_erp_client ec on bb.client_cd=ec.client_cd
+              
+              
+	</select>
+	
+	<update id="armngUpdate">
+		UPDATE tb_order
+		
+		   SET deposit_yn = 'y', STTcd='2'
+			   
+	    where order_cd = #{order_cd}
+		  	
+	</update>
+</mapper>
+

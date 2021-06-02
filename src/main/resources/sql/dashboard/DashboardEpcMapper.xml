@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.dashboard.dao.DashboardEpcDao">
+	
+	<select id="selectSlideProductInfo" resultType="kr.happyjob.study.dashboard.model.SlideProductInfoVO"
+	parameterType="kr.happyjob.study.dashboard.model.SlideProductInfoRequestDTO">
+		SELECT tb_product.pro_no, tb_product.pro_name, tb_product.pro_price, tb_product.pro_detail, tb_file.file_server_path
+		FROM tb_product, tb_file, tb_detail_code
+		WHERE tb_file.pro_no = tb_product.pro_no
+		AND tb_product.pro_cd = tb_detail_code.detail_code
+		AND tb_detail_code.group_code = 'proCD'
+		
+		<if test='detail_name != null'>
+		AND tb_detail_code.detail_name = #{detail_name}
+		</if>
+	</select>
+
+	<select id="selectProductCategory" resultType="kr.happyjob.study.dashboard.model.ProductCategoryVO">
+		SELECT DISTINCT tb_detail_code.detail_code, tb_detail_code.detail_name
+		FROM tb_detail_code, tb_product, tb_file
+
+		WHERE tb_detail_code.group_code = 'proCD'
+		AND tb_product.pro_cd = tb_detail_code.detail_code
+		AND tb_file.pro_no = tb_product.pro_no
+	</select>
+
+</mapper>

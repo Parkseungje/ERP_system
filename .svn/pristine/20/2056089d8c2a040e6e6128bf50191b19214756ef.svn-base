@@ -1,0 +1,372 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<title>근태신청/조회</title>
+<jsp:include page="/WEB-INF/view/common/common_include.jsp"></jsp:include>
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+<script src="${CTX_PATH}/js/summernote/summernote-ko-KR.js"></script>
+<style type="text/css">
+.right {
+	align: right;
+}
+
+.left {
+	align: left;
+}
+
+.center {
+	display: flex;
+	justify-content: center;
+}
+
+.middle {
+	vertical-align: middle;
+}
+
+.title {
+	font-size: 40px;
+	padding: 30px;
+}
+
+.sa {
+	display: flex;
+	justify-content: space-around;
+}
+
+.hei {
+	height: 30px;
+	margin: 0px 20px 0px 20px;
+	width: 200px;
+}
+</style>
+<script type="text/javascript">
+	function fPopModalEmpTaApply() {
+		gfModalPop('#layer2');
+	}
+	function fPopModalEmpTaApplyreturn() {
+		gfModalPop('#layer1');
+	}
+	
+	//받아온 리스트데이터 호출
+	$(document).ready(function() {
+		
+		fEmpTaApplyList();
+		
+		$("#to_date").change(function() {
+			if ($("#to_date").val() < $("#from_date").val()) {
+				swal("최소기간 보다 작을수 없습니다.")
+				$("#to_date").val('');
+			}
+		});
+	}); 
+	
+	//리스트 데이터 받아오기
+	function fEmpTaApplyList(currentPage) {
+		
+		currentPage = currentPage || 1;
+		var acc_cb = $('#acc_cb').val();
+		var g_cd = $('#g_cd').val();
+		var from_date = $("#from_date").val();
+		var to_date = $("#to_date").val();
+
+		var param = {
+			currentPage : currentPage,
+			pageSizeAccSlip : pageSizeAccSlip,
+			acc_cb : acc_cb,
+			g_cd : g_cd,
+			from_date : from_date,
+			to_date : to_date
+		}
+
+		var resultCallback = function(data) {
+			fEmpTaApplyResult(data, currentPage);
+		};
+
+		//Ajax실행 방식
+		//callAjax("Controller Url",type,return,async or sync방식,넘겨준거,값,Callback함수 이름)
+		// json으로 보내서 오류가 났음 , -> text
+		callAjax("/accounting/accSlipCallback.do", "post", "text", true, param,resultCallback);
+	}
+
+	//리스트 데이터 출력
+	function fEmpTaApplyResult(data, currentPage) {
+		console.log("data 값" + data);
+		$('#accSlipList').empty();
+		$('#accSlipList').append(data);
+		
+		var accSlipCnt = $("#totalAccSlipCnt").val();
+		console.log("accSlipCnt  :  " + accSlipCnt);
+		
+		//var paginationHtml = getPaginationHtml(currentPage, totalCntComnGrpCod, pageSizeComnGrpCod, pageBlockSizeComnGrpCod, 'fListComnGrpCod');
+		var paginationHtml = getPaginationHtml(currentPage, accSlipCnt, pageSizeAccSlip, pageBlockSizeAccSlip, 'fAccSlipList');
+		console.log("paginationHtml : " + paginationHtml);
+
+		//swal(paginationHtml);
+		$("#accSlipPagination").empty().append(paginationHtml);
+
+		// 현재 페이지 설정
+		$("#currentPageAccSlip").val(currentPage);
+	}
+</script>
+
+
+</head>
+<body>
+	<form id="myForm">
+		<div id="mask"></div>
+		<div id="wrap_area">
+			<jsp:include page="/WEB-INF/view/common/header.jsp"></jsp:include>
+			<div id="container">
+				<ul>
+					<li class="lnb"><jsp:include page="/WEB-INF/view/common/lnbMenu.jsp"></jsp:include></li>
+					<li class="contents">
+						<h3 class="hidden">contents 영역</h3>
+						<div class="content">
+							<p class="Location">
+								<a href="" class="btn_set home">메인으로</a> <a href="" class="btn_nav">학습지원</a> <span class="btn_nav bold">공지사항</span> <a href="" class="btn_set refresh">새로고침</a>
+							</p>
+
+							<!-- 관리자 공지사항 리스트 조회  -->
+							<div class="divComGrpCodList">
+								<p class="conTitle">
+									<span>근태신청/조회</span> <span class="fr"> <span> <Strong>일자 </Strong> <input type="date" id="from_date">~<input type="date" id="to_date"> <select id="adm_type" style="width: 120px;">
+												<option value="all" selected="selected">근태종류</option>
+												<option value="content">연차</option>
+												<option value="content">월차</option>
+												<option value="content">반차</option>
+										</select> <select id="adm_type" style="width: 120px;">
+												<option value="all" selected="selected">결재상태</option>
+												<option value="content">승인</option>
+												<option value="content">미승인</option>
+												<option value="content">승인대기</option>
+										</select> <a class="btnType blue" href="javascript:flist_tut()" name="search"> <span id="searchEnter">조회</span>
+										</a>
+									</span>
+
+									</span>
+								</p>
+								<table class="col" style="margin-top: 20px;">
+									<caption>caption</caption>
+									<thead>
+										<tr>
+											<th scope="col">총 연차</th>
+											<th scope="col">사용 연차</th>
+											<th scope="col">남은 연차</th>
+										</tr>
+									</thead>
+									<tbody id="admNoticeList">
+										<tr>
+											<td></td>
+											<td></td>
+											<td></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+
+							<!-- <div class="paging_area" id="admPagination"></div> -->
+
+							<div class="fr" style="margin: 3px 0px 3px 0px;">
+								<a class="btnType blue" href="javascript:fPopModalEmpTaApply()" name="search"> <span id="searchEnter">개인근태신청</span>
+								</a>
+							</div>
+							<table class="col">
+								<colgroup>
+									<col width="5%">
+									<col width="10%">
+									<col width="30%">
+									<col width="30%">
+									<col width="10%">
+									<col width="15%">
+								</colgroup>
+								<thead>
+									<tr>
+										<th scope="col">번호</th>
+										<th scope="col">휴가종류</th>
+										<th scope="col">시작일</th>
+										<th scope="col">종료일</th>
+										<th scope="col">결재자</th>
+										<th scope="col">결재상태</th>
+									</tr>
+								</thead>
+								<tbody id="admNoticeList">
+									<tr>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td><a href="javascript:fPopModalEmpTaApplyreturn()" style="text-decoration: none;">반려</a></td>
+									</tr>
+									<tr>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+									</tr>
+									<tr>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+									</tr>
+									<tr>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+									</tr>
+									<tr>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+									</tr>
+									<tr>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+									</tr>
+									<tr>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+									</tr>
+								</tbody>
+							</table>
+							</div>
+							</ul>
+							</div>
+							</div>
+	</form>
+
+	<form id="myForm">
+		<div id="layer1" class="layerPop layerType2" style="width: 860px; height: 500px;">
+			<dl>
+				<dt>
+					<strong>반려사유</strong>
+				</dt>
+				<dd class="content" style="width: 800px; height: 500px; padding-bottom: 0px;">
+
+					<table class="col" style="background-color: rgb(243, 243, 243);">
+						<colgroup>
+							<col width="20%">
+							<col width="30%">
+							<col width="50%">
+						</colgroup>
+						<h1 class="fl title">반려사유</h1>
+						<thead class="fl" style="width: 40%; border: solid 1px rgb(187, 194, 205)">
+						<tr>
+							<th scope="col">결재자</th>
+							<td scope="col" style="width: 80%; text-align: center;">홍길동</td>
+						</tr>
+						</thead>
+					</table>
+					<table class="col">
+						<colgroup>
+							<col width="20%">
+							<col width="80%">
+						</colgroup>
+						<thead style="border: solid 1px rgb(187, 194, 205)">
+							<th scope="col"">반려사유</th>
+							<td scope="col" style="width: 940px; height: 290px;"></td>
+						</thead>
+					</table>
+				</dd>
+			</dl>
+			<a href="" class="closePop"><span class="hidden">닫기</span></a>
+		</div>
+
+
+		<div id="layer2" class="layerPop layerType2" style="width: 800px; height: 620px;">
+			<dl>
+				<dt>
+					<strong>근태신청</strong>
+				</dt>
+				<dd class="content" style="width: 740px; height: 500px; padding-bottom: 0px;">
+
+					<table class="col" style="background-color: rgb(220, 225, 230);">
+						<colgroup>
+							<col width="20%">
+							<col width="30%">
+							<col width="20%">
+							<col width="30%">
+						</colgroup>
+						<h1 class="center title">근태 신청서</h1>
+						<thead class="middle">
+							<tr>
+								<th scope="col">근무부서</th>
+								<td scope="col" style="padding: 0px; width: 200px;"><input style="width: 200px; height: 30px; padding: 0px; text-align: center; display: block; margin: 0 auto;" type="text"></td>
+								<th scope="col">근태종류</th>
+								<td scope="col" class="center" style="width: 200px; height: 30px; padding: 0px; text-align: center; display: block; margin: 0 auto;"><select id="adm_type" class="center" style="width: 200px; height: 30px; padding: 0px; text-align: center; display: block; margin: 4px 0px 4px 0px;">
+										<option value="content">연차</option>
+										<option value="content">월차</option>
+										<option value="content">반차</option>
+								</select></td>
+							</tr>
+							<tr class="left">
+								<th scope="col">성명</th>
+								<td scope="col" style="padding: 0px; width: 200px;"><input style="width: 200px; height: 30px; padding: 0px; text-align: center; display: block; margin: 0 auto;" type="text"></td>
+							</tr>
+							<tr style="margin-bottom: 20px;">
+								<th scope="col">사번</th>
+								<td scope="col" style="padding: 0px; width: 200px;"><input style="width: 200px; height: 30px; padding: 0px; text-align: center; display: block; margin: 0 auto;" type="text"></td>
+							</tr>
+						</thead>
+					</table>
+					<table class="col" style="background-color: rgb(220, 225, 230);">
+						<colgroup>
+							<col width="20%">
+							<col width="80%">
+						</colgroup>
+						<thead>
+							<tr scope="col">
+								<th scope="col">기간</th>
+								<td scope="col"><span style="position: relative; width: 100%; height: 30px; padding: 0px; text-align: center; display: block; margin: 0 auto;"> <input type="date" id="from_date" class="hei">~<input type="date" id="to_date" class="hei">
+								</span></td>
+							</tr>
+							<tr scope="col" style="height: 200px;">
+								<th scope="col">휴가사유</th>
+								<td style="" class="center"><input type="text" style="height: 200px; margin: 6px 9.5px 6px 9.5px; width: 100%"></td>
+							</tr>
+							<tr>
+								<th scope="col">비상연락처</th>
+								<td style="" class="center"><input type="text" style="height: 30px; margin: 6px 9.5px 6px 9.5px; width: 100%"></td>
+							</tr>
+						</thead>
+					</table>
+				</dd>
+			</dl>
+			<a href="" class="closePop"><span class="hidden">닫기</span></a>
+
+			<div class="btn_areaC mt20" style="position: absolute; bottom: 20px;">
+				<a href="javascript:fWrite();" class="btnType blue" id="submitBtn"><span id="">신청</span></a> <a href="" class="btnType blue" id="closeBtn"><span id="">닫기</span></a>
+			</div>
+		</div>
+	</form>
+
+
+</body>
+</html>

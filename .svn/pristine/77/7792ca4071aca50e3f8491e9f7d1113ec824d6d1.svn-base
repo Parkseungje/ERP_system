@@ -1,0 +1,28 @@
+package kr.happyjob.study.employee.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import kr.happyjob.study.employee.model.EmployeeModel;
+
+public interface EmpMgtDao {
+	/* 사원등록 -> 사번 만들기*/
+	public String gainLoginID();
+	
+	/* 사원등록 -> tb_userinfo */
+	public void empRegister1(Map<String, Object> paramMap) throws Exception;
+	
+	/* 사원등록 -> tb_emp */
+	public void empRegister2(Map<String, Object> paramMap) throws Exception;
+
+	/* 사원 프로필 사진 등록 */
+	public void empRegisterProfile(Map<String, Object> listFileUtilModel) throws Exception;
+
+	/* 사원 리스트 조회 */
+	public List<EmployeeModel> showEmpList(Map<String, Object> paramMap);
+
+	/* 재직자 리스트 조회 -> 총 글 수 조회 */
+	public int countEmpList(Map<String, Object> paramMap);
+
+
+}

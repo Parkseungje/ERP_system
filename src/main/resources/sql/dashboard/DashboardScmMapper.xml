@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.happyjob.study.dashboard.dao.DashboardScmDao">
+
+
+
+	<select id="getCurdateData" parameterType="map" resultType="kr.happyjob.study.dashboard.model.DashboardScmModel">
+		select count(order_date) as orderdate  from tb_order
+		where date_format(order_date,"%Y-%m-%d") >= date_add(curdate(), interval -1 day)
+		union all
+		select count(*) from tb_refund
+		where refund_confirm_cd = 0
+		union all
+		select count(*) as noanswer from tb_inquiry
+		where answer_cd = 0
+		union all
+		select count(*) as waiting from tb_shipping
+		where ship_cd = 'waiting'
+		union all
+		select count(*) as nopur from tb_purchase
+		where purchase_cd = 0
+		union all
+		select count(*) as notaprrove from tb_userinfo 
+		where approval_cd = 'n'  
+	</select>
+
+	<select id="getBardateData" parameterType="map" resultType="kr.happyjob.study.dashboard.model.DashboardScmModel">
+		select pro_no,sum(order_qty) as order_qty from tb_order
+		group by pro_no;
+		
+		
+	</select>
+
+</mapper>
+

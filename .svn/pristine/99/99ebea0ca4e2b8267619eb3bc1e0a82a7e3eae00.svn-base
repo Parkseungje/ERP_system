@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.cmnt.dao.CmntBbsDao">
+	
+	<!-- 게시글 목록 조회 -->
+	<select id="listCmntBbs" resultType="kr.happyjob.study.dashboard.model.CmntBbsModel">
+	/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.listCmntBbs */
+		select cm.cmnt_id
+		  ,cm.cmnt_nm
+		  ,cb.bbs_id
+		  ,cb.usr_sst_id
+		  ,cb.wtr_nm
+		  ,um.usr_nm
+		  ,um.ofc_id
+		  ,cb.hir_bbs_id
+		  ,cb.sae_obj_gbn_cod
+		  ,cb.sae_obj_gbn_id
+		  ,cb.titl
+		  ,'' as cnts
+		  ,cb.lvl
+		  ,cb.vews
+		  ,date_format(cb.bbs_sat_dtt, "%Y.%m.%d") as bbs_sat_dtt
+		  ,date_format(cb.bbs_end_dtt, "%Y.%m.%d") as bbs_end_dtt
+		  ,cb.dlt_poa
+		  ,cb.pop_poa
+		  ,date_format(cb.pop_sat_dtt, "%Y.%m.%d") as pop_sat_dtt
+		  ,date_format(cb.pop_end_dtt, "%Y.%m.%d") as pop_end_dtt
+		  ,ifnull(cc.cmt_cnt,0) as cmt_cnt
+		  ,DATE_FORMAT(cb.fst_enlm_dtt,'%Y%m%d%H%i%s') AS write_date
+		  ,cb.fst_enlm_dtt
+		  ,cb.fst_rgst_sst_id
+		  ,cb.fnl_mdfd_dtt
+		  ,cb.fnl_mdfr_sst_id
+		from tn_cmnt_bbs cb
+		left outer join (SELECT (count(1)-1) AS cnt ,hir_bbs_id
+	                    FROM tn_cmnt_bbs
+	                    where DLT_POA = 'N'
+	                 	GROUP BY hir_bbs_id) tcb
+		on cb.hir_bbs_id = tcb.hir_bbs_id
+		inner join tm_cmnt_mst cm
+		on cb.cmnt_id = cm.cmnt_id
+		left outer join tm_usr_mst um
+		on cb.usr_sst_id = um.usr_sst_id
+		left outer join (select bbs_id, count(1) as cmt_cnt from tn_cmnt_cmt group by bbs_id) cc
+		on cb.bbs_id = cc.bbs_id
+		where 1=1
+		and if(cb.dlt_poa = 'Y' and (cb.lvl > tcb.cnt), 0,1) = 1 
+  		and tcb.cnt is not null
+		and cb.cmnt_id = #{cmnt_id}
+		<if test="(searchInput != null) and (!searchInput.equals(''))">
+			<choose>
+				<when test="(listSrchOpt != null) and (listSrchOpt eq 'A'.toString())">
+			     and (cb.cnts LIKE CONCAT('%', #{searchInput}, '%')
+			     or cb.titl LIKE CONCAT('%', #{searchInput}, '%')
+			     or um.usr_nm LIKE CONCAT('%', #{searchInput}, '%'))
+				</when>
+				<when test="(listSrchOpt != null) and (listSrchOpt eq 'T'.toString())">
+			     and cb.titl LIKE CONCAT('%', #{searchInput}, '%')
+				</when>
+				<when test="(listSrchOpt != null) and (listSrchOpt eq 'C'.toString())">
+			     and cb.cnts LIKE CONCAT('%', #{searchInput}, '%')
+				</when>
+				<when test="(listSrchOpt != null) and (listSrchOpt eq 'W'.toString())">
+			     and um.usr_nm LIKE CONCAT('%', #{searchInput}, '%')
+				</when>
+				<otherwise>
+					AND 1=2
+				</otherwise>
+			</choose>
+		</if>
+		<choose>
+			<when test ="(ofcDvsCod != null) and (ofcDvsCod eq 'M'.toString())">
+				
+			</when>
+			<when test ="(ofcDvsCod != null) and (ofcDvsCod eq 'A'.toString())">
+				AND (cb.sae_obj_gbn_cod = 'O'
+					OR cb.sae_obj_gbn_cod = 'A'
+					OR cb.sae_obj_gbn_id = #{ofcId}
+					OR (cb.sae_obj_gbn_cod = 'E'
+						AND um.ofc_id = #{ofcId})
+				)
+			</when>
+			<when test ="(ofcDvsCod != null) and (ofcDvsCod eq 'H'.toString())">
+				AND (cb.sae_obj_gbn_cod = 'O'
+					OR cb.sae_obj_gbn_cod = 'H'
+					OR cb.sae_obj_gbn_id = #{ofcId}
+					OR (cb.sae_obj_gbn_cod = 'E'
+						AND um.ofc_id = #{ofcId})
+				)
+			</when>
+			<otherwise>
+				AND 1=2
+			</otherwise>
+		</choose>
+		and if(cb.bbs_sat_dtt is not null, DATE_FORMAT(NOW(), "%Y%m%d") <![CDATA[>=]]> DATE_FORMAT(cb.bbs_sat_dtt, "%Y%m%d"), 1=1)
+		and if(cb.bbs_end_dtt is not null, DATE_FORMAT(NOW(), "%Y%m%d") <![CDATA[<=]]> DATE_FORMAT(cb.bbs_end_dtt, "%Y%m%d"), 1=1)
+		order by cb.hir_bbs_id DESC, cb.lvl ASC, cb.bbs_id DESC
+		limit #{pageIndex}, #{pageSize}
+	</select>
+	
+	<!-- 게시글 목록 총 갯수 조회 -->
+	<select id="countListBbs" resultType="int">
+	/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.countListBbs */
+		select 
+			count(1) as tot_cnt 
+		from tn_cmnt_bbs cb
+		left outer join (SELECT (count(1)-1) AS cnt ,hir_bbs_id
+	                    FROM tn_cmnt_bbs
+	                    where DLT_POA = 'N'
+	                 	GROUP BY hir_bbs_id) tcb
+		on cb.hir_bbs_id = tcb.hir_bbs_id
+		left outer join tm_usr_mst um
+		on cb.usr_sst_id = um.usr_sst_id
+		where 1=1
+		and if(cb.dlt_poa = 'Y' and (cb.lvl > tcb.cnt), 0,1) = 1 
+  		and cnt is not null
+		and cmnt_id = #{cmnt_id}
+		<if test="(searchInput != null) and (!searchInput.equals(''))">
+			<choose>
+				<when test="(listSrchOpt != null) and (listSrchOpt eq 'A'.toString())">
+			     and (cb.cnts LIKE CONCAT('%', #{searchInput}, '%')
+			     or cb.titl LIKE CONCAT('%', #{searchInput}, '%')
+			     or um.usr_nm LIKE CONCAT('%', #{searchInput}, '%'))
+				</when>
+				<when test="(listSrchOpt != null) and (listSrchOpt eq 'T'.toString())">
+			     and cb.titl LIKE CONCAT('%', #{searchInput}, '%')
+				</when>
+				<when test="(listSrchOpt != null) and (listSrchOpt eq 'C'.toString())">
+			     and cb.cnts LIKE CONCAT('%', #{searchInput}, '%')
+				</when>
+				<when test="(listSrchOpt != null) and (listSrchOpt eq 'W'.toString())">
+			     and um.usr_nm LIKE CONCAT('%', #{searchInput}, '%')
+				</when>
+				<otherwise>
+					AND 1=2
+				</otherwise>
+			</choose>
+		</if>
+		<choose>
+			<when test ="(ofcDvsCod != null) and (ofcDvsCod eq 'M'.toString())">
+				
+			</when>
+			<when test ="(ofcDvsCod != null) and (ofcDvsCod eq 'A'.toString())">
+				AND (cb.sae_obj_gbn_cod = 'O'
+					OR cb.sae_obj_gbn_cod = 'A'
+					OR cb.sae_obj_gbn_id = #{ofcId}
+					OR (cb.sae_obj_gbn_cod = 'E'
+						AND um.ofc_id = #{ofcId})
+				)
+			</when>
+			<when test ="(ofcDvsCod != null) and (ofcDvsCod eq 'H'.toString())">
+				AND (cb.sae_obj_gbn_cod = 'O'
+					OR cb.sae_obj_gbn_cod = 'H'
+					OR cb.sae_obj_gbn_id = #{ofcId}
+					OR (cb.sae_obj_gbn_cod = 'E'
+						AND um.ofc_id = #{ofcId})
+				)
+			</when>
+			<otherwise>
+				AND 1=2
+			</otherwise>
+		</choose>
+		and if(cb.bbs_sat_dtt is not null, DATE_FORMAT(NOW(), "%Y%m%d") <![CDATA[>=]]> DATE_FORMAT(cb.bbs_sat_dtt, "%Y%m%d"), 1=1)
+		and if(cb.bbs_end_dtt is not null, DATE_FORMAT(NOW(), "%Y%m%d") <![CDATA[<=]]> DATE_FORMAT(cb.bbs_end_dtt, "%Y%m%d"), 1=1)
+	</select>
+	
+	<!-- 게시글 단건 조회 -->
+	<select id="selectCmntBbs" resultType="kr.happyjob.study.dashboard.model.CmntBbsModel">
+	/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.selectCmntBbs */
+		select cm.cmnt_id
+		  ,cm.cmnt_nm
+		  ,cb.bbs_id
+		  ,cb.usr_sst_id
+		  ,cb.wtr_nm
+		  ,um.usr_nm
+		  ,um.ofc_id
+		  ,cb.hir_bbs_id
+		  ,cb.sae_obj_gbn_cod
+		  ,cb.sae_obj_gbn_id
+		  ,cb.titl
+		  ,cb.cnts
+		  ,cb.vews
+		  ,date_format(cb.bbs_sat_dtt, "%Y.%m.%d") as bbs_sat_dtt
+		  ,date_format(cb.bbs_end_dtt, "%Y.%m.%d") as bbs_end_dtt
+		  ,cb.dlt_poa
+		  ,cb.pop_poa
+		  ,date_format(cb.pop_sat_dtt, "%Y.%m.%d") as pop_sat_dtt
+		  ,date_format(cb.pop_end_dtt, "%Y.%m.%d") as pop_end_dtt
+		  ,ifnull(cc.cmt_cnt,0) as cmt_cnt
+		  ,cb.fst_enlm_dtt
+		  ,cb.fst_rgst_sst_id
+		  ,cb.fnl_mdfd_dtt
+		  ,cb.fnl_mdfr_sst_id
+		from tn_cmnt_bbs cb
+		inner join tm_cmnt_mst cm
+		on cb.cmnt_id = cm.cmnt_id
+		inner join tm_usr_mst um
+		on cb.usr_sst_id = um.usr_sst_id
+		left outer join (select bbs_id, count(1) as cmt_cnt from tn_cmnt_cmt group by bbs_id) cc
+		on cb.bbs_id = cc.bbs_id
+		where 1=1
+		and cb.bbs_id = #{bbs_id}
+	</select>
+	
+	<!-- 게시글 ID 채번 -->
+	<select id="selectBbsID" resultType="String">
+	/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.selectBbsID */
+		SELECT  concat('B', date_format(now(),'%y%m%d'), lpad(nextval('CmntBbs'), 6, '0')) AS bbs_id
+	</select>
+		
+	<!-- 게시글 저장 -->
+	<insert id="insertCmntBbs">
+	/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.insertCmntBbs */
+		insert into tn_cmnt_bbs (
+			bbs_id, cmnt_id, usr_sst_id, wtr_nm
+			, hir_bbs_id, lvl, sae_obj_gbn_cod
+			<if test="(sae_obj_gbn_id != null) and (!sae_obj_gbn_id.equals(''))">
+			, sae_obj_gbn_id
+			</if>
+			, titl, cnts
+			<if test="(bbs_dtt != null) and (bbs_dtt eq 'Y'.toString())">
+			, bbs_sat_dtt, bbs_end_dtt
+			</if>
+			<if test="(pop_poa != null) and (pop_poa eq 'Y'.toString())">
+			, pop_poa
+			, pop_sat_dtt, pop_end_dtt
+			</if>
+			, fst_enlm_dtt, fst_rgst_sst_id, fnl_mdfd_dtt, fnl_mdfr_sst_id
+			)
+			values 
+			(
+				#{bbs_id}
+				, #{cmnt_id}
+				, #{usr_sst_id}
+				, #{wtr_nm}
+				<choose>
+					<when test="(hir_bbs_id != null) and (!hir_bbs_id.equals(''))">
+						, #{hir_bbs_id}
+						, #{lvl} + 1
+					</when>
+					<otherwise>
+						, #{bbs_id}
+						, 0
+					</otherwise>
+				</choose>
+				, #{sae_obj_gbn_cod}
+				<if test="(sae_obj_gbn_id != null) and (!sae_obj_gbn_id.equals(''))">
+					, #{sae_obj_gbn_id}
+				</if>
+				, #{titl}
+				, #{cnts}
+				<if test="(bbs_dtt != null) and (bbs_dtt eq 'Y'.toString())">
+				, #{bbs_sat_dtt}
+				, #{bbs_end_dtt}
+				</if>
+				<if test="(pop_poa != null) and (pop_poa eq 'Y'.toString())">
+				, #{pop_poa}
+				, #{pop_sat_dtt}
+				, #{pop_end_dtt}
+				</if>
+				, now()
+				, #{fst_rgst_sst_id}
+				, now()
+				, #{fnl_mdfr_sst_id}
+			)
+	</insert>
+	
+	<!-- 게시글 수정 -->
+	<update id="updateCmntBbs">
+	/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.updateCmntBbs */
+		update tn_cmnt_bbs set
+			sae_obj_gbn_cod	= #{sae_obj_gbn_cod}
+			<if test="(sae_obj_gbn_id != null) and (!sae_obj_gbn_id.equals(''))">
+				, sae_obj_gbn_id = #{sae_obj_gbn_id}
+			</if>
+			, wtr_nm = #{wtr_nm}
+			, titl	= #{titl}
+			, cnts	= #{cnts}
+			, vews	= #{vews}
+			<if test="(bbs_dtt != null) and (bbs_dtt eq 'Y'.toString())">
+			, bbs_sat_dtt	= #{bbs_sat_dtt}
+			, bbs_end_dtt	= #{bbs_end_dtt}
+			</if>
+			<if test="(pop_poa != null) and (pop_poa eq 'Y'.toString())">
+			, pop_poa	= #{pop_poa}
+			, pop_sat_dtt	= #{pop_sat_dtt}
+			, pop_end_dtt	= #{pop_end_dtt}
+			</if>
+			, fnl_mdfd_dtt	= now() 
+			, fnl_mdfr_sst_id = #{fnl_mdfr_sst_id}
+		where	bbs_id = #{bbs_id}
+	</update>
+	
+	<!-- 게시글 삭제 -->
+	<update id="deleteCmntBbs">
+	/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.deleteCmntBbs */
+		update tn_cmnt_bbs set dlt_poa = 'Y' where bbs_id = #{bbs_id}
+	</update>
+	
+	<!-- 게시글 조회수 update -->
+	<update id="updateCmntBbsVews">
+	/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.updateCmntBbsVews */
+		update tn_cmnt_bbs set vews = vews + 1 where bbs_id = #{bbs_id}
+	</update>
+	
+	<!-- 게시글 첨부 목록 조회 -->
+	<select id="listCmntBbsAtmtFil"  resultType="kr.happyjob.study.dashboard.model.CmntBbsAtmtFilModel">
+		/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.listCmntBbsAtmtFil*/
+		SELECT	bbs_id, snm, atmt_fil_lgc_fil_nm, atmt_fil_psc_fil_nm, fil_siz, fil_ets
+		FROM		tn_cmnt_bbs_atmt_fil
+		WHERE	bbs_id = #{bbs_id}
+			<if test="listCmtAtmtSnm != null">
+			AND	snm IN
+        			<foreach collection="listCmtAtmtSnm" item="item" index="index" separator="," open="(" close=")">
+            			#{item}
+        			</foreach>
+			</if>
+	</select>
+	
+	<!-- 게시글 첨부 단건 조회 -->
+	<select id="selectCmntBbsAtmtFil" resultType="kr.happyjob.study.dashboard.model.CmntBbsAtmtFilModel">
+		/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.selectCmntBbsAtmtFil*/
+		SELECT	bbs_id, snm, atmt_fil_lgc_fil_nm, atmt_fil_psc_fil_nm, fil_siz, fil_ets
+		FROM		tn_cmnt_bbs_atmt_fil
+		WHERE	bbs_id = #{bbs_id}
+			AND snm = #{snm}
+	</select>
+	
+	<!-- 게시글 첨부 파일 저장 -->
+	<insert id="saveCmntBbsAtmtFil">
+		/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.saveCmntBbsAtmtFil*/
+		INSERT INTO tn_cmnt_bbs_atmt_fil
+		(
+			bbs_id, snm, atmt_fil_lgc_fil_nm, atmt_fil_psc_fil_nm, fil_siz, fil_ets
+		)
+		VALUES
+		(
+				#{bbs_id}
+			,	(SELECT IFNULL(MAX(snm), 0)+1 AS snm FROM tn_cmnt_bbs_atmt_fil TA WHERE bbs_id = #{bbs_id})
+			,	#{atmt_fil_lgc_fil_nm}
+			,	#{atmt_fil_psc_fil_nm}
+			,	#{fil_siz}
+			,	#{fil_ets}
+		)
+	</insert>
+	
+	<!-- 게시글 첨부 파일 수정 -->
+	<update id="updateCmntBbsAtmtFil">
+		/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.updateCmntBbsAtmtFil*/
+		UPDATE tn_cmnt_bbs_atmt_fil SET
+					atmt_fil_lgc_fil_nm = #{atmt_fil_lgc_fil_nm}
+				,	atmt_fil_psc_fil_nm = #{atmt_fil_psc_fil_nm}
+				,	fil_siz = #{fil_siz}
+				,	fil_ets = #{fil_ets}
+		WHERE bbs_id = #{bbs_id}
+			AND snm = #{snm}
+	</update>
+	
+	<!-- 게시글 첨부 파일 단건 삭제 -->
+	<delete id="deleteCmntBbsAtmtFil">
+		/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.deleteCmntBbsAtmtFil*/
+		DELETE FROM tn_cmnt_bbs_atmt_fil
+		WHERE bbs_id=#{bbs_id}
+			<if test="listCmtAtmtSnm != null">
+			AND	snm IN
+        			<foreach collection="listCmtAtmtSnm" item="item" index="index" separator="," open="(" close=")">
+            			#{item}
+        			</foreach>
+			</if>
+	</delete>
+	
+	<!-- 게시글 첨부 파일 일괄 삭제 -->
+	<delete id="deleteAllCmntBbsAtmtFil">
+		/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.deleteAllCmntBbsAtmtFil*/
+		DELETE FROM tn_cmnt_bbs_atmt_fil WHERE bbs_id=#{bbs_id}
+	</delete>
+	
+	<!-- 댓글 조회 -->
+	<select id="listBbsCmt" resultType="kr.happyjob.study.dashboard.model.CmntBbsCmtModel">
+		/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.listBbsCmt*/
+		select cc.cmt_id
+			, cc.bbs_id
+			, cc.usr_sst_id
+			, um.usr_nm
+			, cc.cmt_cnt
+			, if(date_format(now(),"%Y%m%d") = date_format(cc.fst_rgst_dtt, "%Y%m%d"),date_format(cc.fst_rgst_dtt, "%H:%i:%s"),date_format(cc.fst_rgst_dtt, "%Y.%m.%d") ) AS fst_rgst_dtt
+			, cc.fst_rgst_sst_id
+      		, if(date_format(now(),"%Y%m%d") = date_format(cc.fnl_mdfd_dtt, "%Y%m%d"),date_format(cc.fnl_mdfd_dtt, "%H:%i:%s"),date_format(cc.fnl_mdfd_dtt, "%Y.%m.%d") ) AS fnl_mdfd_dtt
+			, cc.fnl_mdfr_sst_id
+		from tn_cmnt_cmt cc
+		inner join tm_usr_mst um
+		on cc.usr_sst_id = um.usr_sst_id
+		where 1=1
+		and bbs_id = #{bbs_id}
+		order by cc.fst_rgst_dtt DESC
+	</select>
+	
+	<!-- 댓글 저장 -->
+	<insert id="insertBbsCmt">
+		/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.insertBbsCmt*/
+		insert into tn_cmnt_cmt (
+				cmt_id
+				, bbs_id
+				, usr_sst_id
+				, cmt_cnt
+				, fst_rgst_dtt
+				, fst_rgst_sst_id
+				, fnl_mdfd_dtt
+				, fnl_mdfr_sst_id
+			)
+			values 
+			(
+				concat('MT', date_format(now(),'%y%m%d'), lpad(nextval('bbsCmt'), 6, '0'))
+				, #{bbs_id}
+				, #{usr_sst_id}
+				, #{cmt_cnt}
+				, now()
+				, #{fst_rgst_sst_id}
+				, now()
+				, #{fnl_mdfr_sst_id}
+			)
+	</insert>
+	
+	<!-- 댓글 삭제 -->
+	<update id="deleteBbsCmt">
+		/* kr.kosmo.jobkorea.cmnt.dao.CmntBbsDao.deleteBbsCmt*/
+		delete from tn_cmnt_cmt where cmt_id = #{cmt_id}
+	</update>
+</mapper>

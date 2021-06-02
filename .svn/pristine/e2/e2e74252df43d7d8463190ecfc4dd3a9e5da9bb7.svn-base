@@ -1,0 +1,5 @@
+package kr.happyjob.study.employee.service;
+
+public interface EmpTaCalendarService {
+
+}

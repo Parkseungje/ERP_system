@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="kr.happyjob.study.employee.dao.EmpTaApplyDao">
+<select id = "empTaApplyList" resultType="kr.happyjob.study.employee.model.EmpTaModel">
+    SELECT CONCAT(UP.name, ' ', EE.detail_name) AS ta_app_nm
+       , TY.detail_name AS ta_yn
+       , TM. ta_no AS ta_no
+       , DATE_FORMAT(TM.ta_reg_date, '%Y-%m-%d') AS ta_reg_date
+       , KH.detail_name AS kind_hol
+       , TM.reason_hol AS reason_hol
+       , DATE_FORMAT(TM.start_date, '%Y-%m-%d') AS start_date
+       , DATE_FORMAT(TM.end_date, '%Y-%m-%d') AS end_date
+       , TM.h_cnt AS h_cnt
+       , IFNULL(TM.can_reason,'') AS can_reason
+       , UI.loginID AS loginID
+       , UI.name AS name
+       , UI.tel AS tel
+       , DN.dept_name AS dept_name
+       , IF((DATE_FORMAT(CURDATE(), '%Y-%m-%d') - DATE_FORMAT(DN.entry_date, '%Y-%m-%d')) != 0, 25, 15) AS total_an
+       , CT.h_cnt AS use_an
+       , IF((DATE_FORMAT(CURDATE(), '%Y-%m-%d') - DATE_FORMAT(DN.entry_date, '%Y-%m-%d')) != 0, 25, 15) - CT.h_cnt AS left_an
+       , TY.detail_code
+       , KH.detail_code
+    FROM tb_ta_mgt TM
+    LEFT JOIN tb_userinfo UI 
+      ON TM.loginID = UI.loginID
+    LEFT JOIN (SELECT DP.dept_name, EM.loginID, EM.entry_date 
+                 FROM tb_emp EM 
+                 LEFT JOIN tb_dept DP 
+                   ON DP.dept_cd = EM.dept_cd) DN ON TM.loginID = DN.loginID
+    LEFT JOIN (SELECT SUM(TM.h_cnt) AS h_cnt, TM.loginID 
+                 FROM tb_ta_mgt TM 
+                GROUP BY TM.loginID) CT ON TM.loginID = CT.loginID
+    LEFT JOIN (SELECT DC.detail_name, DC.detail_code
+                 FROM tb_detail_code DC WHERE DC.group_code = 'VACcd') KH ON KH.detail_code = TM.kind_hol
+    LEFT JOIN (SELECT DC.detail_name, DC.detail_code
+                 FROM tb_detail_code DC WHERE DC.group_code = 'Okcd') TY ON TY.detail_code = TM.ta_yn
+    LEFT JOIN (SELECT EP.loginID, DC.detail_name
+                 FROM tb_detail_code DC
+                 LEFT JOIN tb_emp EP 
+                   ON DC.detail_code = EP.POScd 
+                WHERE DC.group_code = 'POScd') EE ON TM.ta_app_nm = EE.loginID
+    LEFT JOIN tb_userinfo UP ON TM.ta_app_nm = UP.loginID
+<where>
+                AND TM.loginID = #{loginID}
+			 <if test="(from_date != null) and (!from_date.equals('')) and (to_date != null) and (!to_date.equals(''))">
+				AND ((DATE_FORMAT(TM.start_date, '%Y-%m-%d') between STR_TO_DATE(#{from_date}, '%Y-%m-%d') and STR_TO_DATE(#{to_date}, '%Y-%m-%d'))  
+				  OR (DATE_FORMAT(TM.end_date, '%Y-%m-%d') between STR_TO_DATE(#{from_date}, '%Y-%m-%d') and STR_TO_DATE(#{to_date}, '%Y-%m-%d')))
+	     	 </if>  
+	      	 <if test ="(lev_type != null) and (!lev_type.equals(''))">
+				AND KH.detail_code = #{lev_type}
+	       	 </if>
+	       	 <if test ="(ta_yn != null) and (!ta_yn.equals(''))">
+	           AND TY.detail_code =  #{ta_yn}
+	       	 </if>
+</where>
+				LIMIT #{pageIndex}, #{pageSize}
+</select>
+
+	<select id="empTaApplyCnt" resultType="int">
+		SELECT Count(TM.loginID)
+    FROM tb_ta_mgt TM 
+   WHERE TM.loginID = #{loginID}
+	</select>
+	
+<select id = "empTaApplyAnList" resultType="kr.happyjob.study.employee.model.EmpTaModel">
+    SELECT  IF((DATE_FORMAT(CURDATE(), '%Y-%m-%d') - DATE_FORMAT(DN.entry_date, '%Y-%m-%d')) != 0, 25, 15) AS total_an
+       , CT.h_cnt AS use_an
+       , IF((DATE_FORMAT(CURDATE(), '%Y-%m-%d') - DATE_FORMAT(DN.entry_date, '%Y-%m-%d')) != 0, 25, 15) - CT.h_cnt AS left_an
+    FROM tb_ta_mgt TM
+    LEFT JOIN tb_userinfo UI 
+      ON TM.loginID = UI.loginID
+    LEFT JOIN (SELECT DP.dept_name, EM.loginID, EM.entry_date 
+                 FROM tb_emp EM 
+                 LEFT JOIN tb_dept DP 
+                   ON DP.dept_cd = EM.dept_cd) DN ON TM.loginID = DN.loginID
+    LEFT JOIN (SELECT SUM(TM.h_cnt) AS h_cnt, TM.loginID 
+                 FROM tb_ta_mgt TM 
+                WHERE TM.ta_yn != '3'
+                GROUP BY TM.loginID) CT ON TM.loginID = CT.loginID
+                WHERE TM.loginID = #{loginID}
+                GROUP BY TM.loginID
+</select>
+
+<select id = "empTaApplyReturn" resultType="kr.happyjob.study.employee.model.EmpTaModel">
+SELECT CONCAT(UP.name, ' ', EE.detail_name) AS ta_app_nm, TM.can_reason AS can_reason, TM.ta_no AS ta_no
+  FROM tb_ta_mgt TM
+  LEFT JOIN (SELECT EP.loginID, DC.detail_name
+               FROM tb_detail_code DC
+               LEFT JOIN tb_emp EP 
+                 ON DC.detail_code = EP.POScd 
+              WHERE DC.group_code = 'POScd') EE ON TM.ta_app_nm = EE.loginID
+  LEFT JOIN tb_userinfo UP ON TM.ta_app_nm = UP.loginID
+  WHERE TM.ta_no = #{ta_no}
+</select>
+
+<select id="empTaApplyModal" resultType="kr.happyjob.study.employee.model.EmpTaModel">
+  SELECT TM.loginID AS loginID
+       , UI.name AS name
+       , UI.tel AS tel
+       , DN.dept_name AS dept_name
+       , IF((DATE_FORMAT(CURDATE(), '%Y-%m-%d') - DATE_FORMAT(DNE.entry_date, '%Y-%m-%d')) != 0, 25, 15) - CT.h_cnt AS left_an
+      FROM tb_ta_mgt TM
+    LEFT JOIN tb_userinfo UI 
+      ON TM.loginID = UI.loginID
+    LEFT JOIN (SELECT DP.dept_name, EM.loginID, EM.entry_date 
+                 FROM tb_emp EM 
+                 LEFT JOIN tb_dept DP 
+                   ON DP.dept_cd = EM.dept_cd) DN ON TM.loginID = DN.loginID
+    LEFT JOIN (SELECT DP.dept_name, EM.loginID, EM.entry_date 
+                 FROM tb_emp EM 
+                 LEFT JOIN tb_dept DP 
+                   ON DP.dept_cd = EM.dept_cd) DNE ON TM.loginID = DNE.loginID
+    LEFT JOIN (SELECT SUM(TM.h_cnt) AS h_cnt, TM.loginID 
+                 FROM tb_ta_mgt TM 
+                WHERE TM.ta_yn != '3'
+                GROUP BY TM.loginID) CT ON TM.loginID = CT.loginID
+                WHERE TM.loginID = #{loginID}
+                GROUP BY TM.loginID
+</select>
+
+<insert id="insertEmpTaApply">
+ <selectKey resultType="int" keyProperty="ta_no" order="BEFORE">
+            select MAX(ta_no)+1 from tb_ta_mgt
+</selectKey> 
+ INSERT INTO tb_ta_mgt (
+       ta_no
+      ,loginID
+      ,ta_app_nm
+      ,ta_yn
+      ,ta_reg_date
+      ,kind_hol
+      ,reason_hol
+      ,start_date
+      ,end_date
+      ,h_cnt
+      ,can_reason
+    ) VALUES (
+       #{ta_no}
+      ,#{loginID}
+      ,#{ta_app_nm}
+      ,'1'
+      ,DATE_FORMAT(NOW(),'%Y-%m-%d')
+      ,#{kind_hol}
+      ,#{reason_hol}
+      ,#{start_date}
+      ,#{end_date}
+      ,DATEDIFF(#{end_date}, #{start_date}) + 1
+      ,#{can_reason}
+    )
+</insert>
+
+</mapper>

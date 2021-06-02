@@ -1,0 +1,49 @@
+package kr.happyjob.study.accounting.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import kr.happyjob.study.accounting.model.DvModel;
+import kr.happyjob.study.accounting.service.DvService;
+import kr.happyjob.study.accounting.dao.DvDao;
+
+@Service
+public class DvServiceImpl implements DvService{
+
+	@Autowired
+	DvDao dvDao;
+	
+	
+	public List<DvModel> listEmpDv(Map<String, Object> paramMap) throws Exception{
+		
+		List<DvModel> listEmpDv = dvDao.listEmpDv(paramMap);
+		
+		return listEmpDv;
+		
+	}
+	
+	public int countListEmpDv(Map<String, Object> paramMap) throws Exception{
+		
+			
+			int totalCount = dvDao.countListEmpDv(paramMap);
+			
+			return totalCount;
+		}	
+	
+	/** 지출결의 단건 조회 */
+	public DvModel selectEmpDv(Map<String, Object> paramMap) throws Exception {
+		
+		DvModel empDvModel = dvDao.selectEmpDv(paramMap);
+		return empDvModel;
+	}
+
+}
+	
+	
+	
+

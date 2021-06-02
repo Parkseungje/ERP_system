@@ -1,0 +1,26 @@
+package kr.happyjob.study.employee.service;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import kr.happyjob.study.employee.model.EmployeeModel;
+
+public interface EmpMgtService {
+
+	public void empRegister(Map<String, Object> paramMap, HttpServletRequest request) throws Exception;
+
+	public String gainLoginID();
+
+	public List<EmployeeModel> showEmpList(Map<String, Object> paramMap);
+
+	public int countEmpList(Map<String, Object> paramMap);
+
+	public EmployeeModel viewEmpDtl(Map<String, Object> paramMap);
+	
+	public int getWorkyear(Map<String, Object> paramMap);
+
+	public void resignEmp(Map<String, Object> paramMap);
+
+}

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.system.dao.ComnComboDao">
+
+	<!-- 부서코드 목록 조회 -->
+	<select id="selectdeptlist" resultType="kr.happyjob.study.system.model.comcombo">
+		/*kr.happyjob.study.system.dao.ComnComboDao.selectdeptlist*/
+		SELECT dept_cd as cd
+                , dept_name as name			
+		FROM	tb_dept
+	</select>
+	
+	<!-- 상세 계정 목록 조회 -->
+	<select id="selectacclist" resultType="kr.happyjob.study.system.model.comcombo">
+		/*kr.happyjob.study.system.dao.ComnComboDao.selectcliemtlist*/
+		SELECT detail_account_cd as cd
+                , detail_account_nm as name		
+		FROM	tb_account	
+	   WHERE account_cd = #{searchkey}
+	      AND UPPER(use_yn) = 'Y'
+	</select>
+	
+
+	<!-- 거래처 목록 조회 -->
+	<select id="selectclientlist" resultType="kr.happyjob.study.system.model.comcombo">
+		/*kr.happyjob.study.system.dao.ComnComboDao.selectclientlist*/
+			select supply_cd as cd
+			       ,concat('SCM-',supply_nm) as name
+			  from tb_scm_supply
+			union 
+			select client_cd as cd
+			       ,concat('ERP-',client_nm) as name
+			  from tb_erp_client
+	</select>
+
+	<!-- 상품 목록 조회 -->
+	<select id="selectproductlist" resultType="kr.happyjob.study.system.model.comcombo">
+		/*kr.happyjob.study.system.dao.ComnComboDao.selectproductlist*/
+			select pr.product_cd as cd
+			      ,concat(ac.m_ct_nm, '-', pr.prod_nm, '-', su.supply_nm) as name
+			  from tb_scm_product pr
+			       inner join tb_scm_m_category ac on ac.m_ct_cd = pr.m_ct_cd
+			       inner join tb_scm_supply su on su.supply_cd = pr.supply_cd
+			 order by pr.m_ct_cd, pr.supply_cd
+	</select>
+	
+	<!-- 창고 담당자 목록 조회 -->
+	<select id="selectwhpersonlist" resultType="kr.happyjob.study.system.model.comcombo">
+		/*kr.happyjob.study.system.dao.ComnComboDao.selectwhpersonlist*/
+			SELECT UI.loginID as cd 
+			       ,  concat(WH.warehouse_nm,'-',UI.name) as name
+			 FROM tb_scm_warehouse WH
+			         LEFT JOIN tb_userinfo UI ON WH.wh_mng_id = UI.loginID
+			WHERE UI.user_type = 'I'
+			  <if test="(searchkey != null) and (!searchkey.equals(''))">
+			  AND WH.warehouse_cd = #{searchkey}
+			  </if>
+	</select>	
+	
+	<!-- 창고 목록 조회 -->
+	<select id="selectwhlist" resultType="kr.happyjob.study.system.model.comcombo">
+		/*kr.happyjob.study.system.dao.ComnComboDao.selectwhlist*/
+			SELECT warehouse_cd as cd
+				     , warehouse_nm as name
+			 FROM tb_scm_warehouse
+	</select>
+	
+	<!-- 제품 대분류 목록 조회 -->
+	<select id="selectlargelist" resultType="kr.happyjob.study.system.model.comcombo">
+		/*kr.happyjob.study.system.dao.ComnComboDao.selectlargelist*/
+			select sl.l_ct_cd as cd
+                   ,sl.l_ct_nm as name
+			  from tb_scm_l_category sl
+			 order by sl.l_ct_cd, sl.l_ct_nm
+	</select>
+	
+	<!-- 제품 중분류 목록 조회 -->
+	<select id="selectmidlist" resultType="kr.happyjob.study.system.model.comcombo">
+		/*kr.happyjob.study.system.dao.ComnComboDao.selectmidlist*/
+			select ac.m_ct_cd as cd
+			       ,ac.m_ct_nm as name
+			  from tb_scm_m_category ac
+			where  ac.l_ct_cd = #{code}
+			 order by ac.m_ct_cd, ac.m_ct_nm
+	</select>
+	
+	<!-- 제품 대분류,중분류 별  목록 조회 -->
+	<select id="selectdivproductlist" resultType="kr.happyjob.study.system.model.comcombo">
+		/*kr.happyjob.study.system.dao.ComnComboDao.selectdivproductlist*/
+			select pr.product_cd as cd
+			      ,concat(ac.m_ct_nm, '-', pr.prod_nm, '-', su.supply_nm) as name
+			  from tb_scm_product pr
+			       inner join tb_scm_m_category ac on ac.m_ct_cd = pr.m_ct_cd
+			       inner join tb_scm_supply su on su.supply_cd = pr.supply_cd
+		   where  pr.m_ct_cd = #{code} 
+			 order by pr.product_cd
+	</select>		
+
+</mapper>

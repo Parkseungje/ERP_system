@@ -1,0 +1,26 @@
+@charset "utf-8";
+/* CSS Document */
+body, table { font-size: 0.75em; font-family:"굴림", gulim, Arial, verdana, Sans-Serif; color:#333; line-height: 1.5em; }
+a { text-decoration:none; color: #666; margin:0;padding:0;}
+/*
+a:link, a:visited { text-decoration:none;color: #3c3c3c;}
+a:hover, a:focus, a:active { text-decoration:underline;}
+*/
+/* css2 */
+body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, form, fieldset, input, textarea, p,blockquote, th, td, button { 
+padding: 0;margin: 0}
+table { border:none}
+td, th { border:0 none}
+h1, h2, h3, h4, h5, h6, th, td, table, input, button, select,  sub { font-size:1em; }
+textarea {font-size: 12px; }
+table {border-collapse:collapse;border-spacing:0;}
+fieldset, img, abbr, acronym { border: 0}
+address, caption, cite, code, dfn, em, th, var {font-weight:normal;font-style:normal}
+ol, ul, li { list-style:none }
+q:before, q:after {content:''}
+img, input, button, select, textarea { vertical-align:middle}
+/* hr { overflow:hidden; position:absolute; top:0; left:0; } */
+caption, legend, .blind { overflow:hidden; font-size:0; line-height:0; height:0; width:0;text-indent:-999em; }
+/* hr,  */caption { visibility:hidden; font-size:0; width:0; height:0; line-height:0; }
+legend { display: none; }
+input, img { vertical-align:middle; }

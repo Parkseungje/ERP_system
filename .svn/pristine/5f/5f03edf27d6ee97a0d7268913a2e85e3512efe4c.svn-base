@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!-- 맵퍼네임 -->
+<mapper namespace="kr.happyjob.study.business.dao.BizPartnerDao">
+
+	<!--  목록 조회 -->
+	<select id="clientList" resultType="kr.happyjob.study.business.model.BizPartnerModel" parameterType ="hashmap" >
+		SELECT   	client_cd
+						,client_nm 
+						,addr
+						,addr_detail
+						,tel
+						,emp_nm
+						,email
+						,emp_hp
+						,memo
+						,reg_date
+						,zip_code
+						,bank
+		FROM tb_erp_client		
+	 <where>
+         <if test="(client_search != null) and (! client_search.equals(''))">
+             and client_nm like CONCAT('%', #{client_search}, '%')
+         </if>
+         <if test="(from_date != null) and (! from_date.equals(''))">
+  				and reg_date  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         </if>
+         <if test="(to_date != null) and (!to_date.equals(''))">
+         and reg_date  <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         </if>         
+      </where>
+		ORDER BY client_cd
+		LIMIT #{pageIndex}, #{pageSize}
+	</select>
+	
+
+
+
+	
+	<!-- 전체 목록 카운트  -->
+	<select id="clientCnt" resultType="int"  parameterType="hashmap">
+		SELECT COUNT(client_cd) <!-- 검색 및 전체 목록 뿌릴때의 카운트, cliCnt -->
+		 FROM tb_erp_client
+	
+	<where>
+         <if test="(client_search != null) and (! client_search.equals(''))">
+             and client_nm like CONCAT('%', #{client_search}, '%')
+         </if>
+         <if test="(from_date != null) and (! from_date.equals(''))">
+  				and reg_date  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         </if>
+         <if test="(to_date != null) and (!to_date.equals(''))">
+         and reg_date  <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         </if>         
+      </where>
+		ORDER BY client_cd
+	</select>
+
+
+	<!-- 단건조회  -->
+	<select id ="selectClientList"  resultType ="kr.happyjob.study.business.model.BizPartnerModel" >
+
+			select  client_cd
+						,client_nm
+						,tel
+						,emp_nm
+						,emp_hp
+						,zip_code
+						,account
+						,bank
+						,addr
+						,addr_detail
+						,account
+						,job_type
+						,cop_no1
+						,cop_no2
+						,cop_no3
+						,memo
+						,email
+						,reg_date				
+			from tb_erp_client
+			where client_cd = #{client_cd} ;
+	</select>	
+	
+	
+		<!-- 단건저장  => 시퀀스 : selectKey -->
+	<insert id="insertClientList" >
+
+        <selectKey resultType="string" keyProperty="client_cd" order="BEFORE">
+            SELECT MAX(CAST(client_cd AS UNSIGNED)) + 1 FROM tb_erp_client 
+        </selectKey> 
+
+		INSERT INTO tb_erp_client
+		(
+				client_cd 
+				,client_nm
+				,emp_nm
+				,emp_hp
+		         ,zip_code
+		         ,bank 
+		         ,account
+		         ,addr
+		         ,addr_detail
+		         ,job_type
+		         ,cop_no1
+		         ,cop_no2
+		         ,cop_no3
+		         ,memo
+		         ,email
+		         ,reg_date
+		         ,tel
+	
+			)
+		VALUES
+		(
+				#{client_cd}
+				,#{client_nm}
+				,#{emp_nm}
+				,#{emp_hp}
+		         ,#{zip_code}
+		         ,#{bank} 
+		         ,#{account}
+		         ,#{addr}
+		         ,#{addr_detail}
+		          ,#{job_type}
+		          ,#{cop_no1}
+		          ,#{cop_no2}
+		          ,#{cop_no3}
+		          ,#{memo}
+		          ,#{email}
+		          ,now()
+		          ,#{tel}
+
+
+
+		     )		
+	</insert>
+	
+	<!-- 단건수정 -->
+	<update id="updateClientList" >
+
+		UPDATE tb_erp_client 
+		
+		SET client_cd  =#{client_cd}
+				,client_nm=#{client_nm}
+				,emp_nm = #{emp_nm}
+				,emp_hp = #{emp_hp}
+		         ,zip_code = #{zip_code}
+		         ,bank = #{bank}
+		         ,account = #{account}
+		         ,addr = #{addr}
+		         ,addr_detail = #{addr_detail}
+		         ,job_type = #{job_type}
+		         ,cop_no1 = #{cop_no1}
+		         ,cop_no2 = #{cop_no2}
+		         ,cop_no3 = #{cop_no3}
+		         ,memo = #{memo}
+		         ,email = #{email}
+		        ,job_type = #{job_type}
+		        ,tel =#{tel}
+		        ,zip_code =#{zip_code}
+		       ,reg_date = now()
+		       
+		       
+
+		where  client_cd = #{client_cd}
+
+	</update>
+	
+	<!-- 단건삭제 -->
+	<delete id="deleteClientList">
+		DELETE FROM tb_erp_client WHERE client_cd = #{client_cd}
+	</delete>
+	
+	
+	
+</mapper>

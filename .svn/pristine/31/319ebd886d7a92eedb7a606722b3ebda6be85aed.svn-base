@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.employee.dao.EmpTaCalendarDao">
+	<select id = "empTaList" resultType="kr.happyjob.study.employee.model.EmpTaModel">
+		SELECT ll.ta_reg_date, ll.ta_yn, COUNT(*) AS ta_yn_cnt
+			FROM (
+				  SELECT tm.ta_yn, DATE_FORMAT(tm.ta_reg_date, '%Y-%m-%d') AS ta_reg_date, ui.name, emp.dept_cd, tm.kind_hol
+						FROM tb_ta_mgt tm 
+							LEFT JOIN tb_userinfo ui ON ui.loginID = tm.loginID 
+							LEFT JOIN tb_emp emp ON emp.loginID = tm.loginID
+						WHERE DATE_FORMAT(tm.ta_reg_date, '%Y-%m-%d') BETWEEN #{startDate} AND #{endDate}
+        		  ) ll
+  		GROUP BY ll.ta_reg_date, ll.ta_yn;
+	</select>
+	
+	<select id = "empTaDetailList" resultType="kr.happyjob.study.employee.model.EmpTaModel">
+		SELECT ty.detail_name AS 'ta_yn', DATE_FORMAT(tm.ta_reg_date, '%Y-%m-%d') AS ta_reg_date, dp.dept_name, ui.name, kh.detail_name AS 'kind_hol'
+			FROM tb_ta_mgt tm 
+           		LEFT JOIN tb_userinfo ui ON ui.loginID = tm.loginID 
+           		LEFT JOIN tb_emp emp ON emp.loginID = tm.loginID
+           		LEFT JOIN (SELECT dc.dept_cd, dc.dept_name
+                     FROM tb_dept dc)dp ON emp.dept_cd = dp.dept_cd
+           		LEFT JOIN (SELECT DC.detail_name, DC.detail_code
+                 	FROM tb_detail_code DC WHERE DC.group_code = 'VACcd')kh ON kh.detail_code = tm.kind_hol
+   		   		LEFT JOIN (SELECT DC.detail_name, DC.detail_code
+                	FROM tb_detail_code DC WHERE DC.group_code = 'Okcd')ty ON ty.detail_code = tm.ta_yn
+			WHERE DATE_FORMAT(tm.ta_reg_date, '%Y-%m-%d') = #{taDate} and ta_yn = #{ta_yn};
+	</select>
+</mapper>

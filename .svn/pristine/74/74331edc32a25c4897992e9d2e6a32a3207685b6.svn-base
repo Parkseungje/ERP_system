@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.system.dao.NoticeDao">
+
+   <!-- 공지사항 목록 조회 -->
+   <select id = "noticeList" resultType = "kr.happyjob.study.system.model.NoticeModel">
+      SELECT
+            n.no as noticeNo
+         ,   n.title as noticeTitle
+         ,   DATE_FORMAT(n.date, '%Y-%m-%d') as noticeRegdate
+         ,   u.loginID as loginId
+      FROM tb_notice n
+         LEFT JOIN   tb_userinfo u
+         ON         n.loginID = u.loginID
+      <where>
+         <if test ="(title != null) and (!title.equals(''))">
+             and n.title  Like CONCAT('%', #{title}, '%')
+         </if>
+         <if test ="(from_date != null) and (!from_date.equals(''))">
+             and n.date  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         </if>         
+         <if test ="(to_date != null) and (!to_date.equals(''))">
+             and n.date  <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         </if>      
+      </where>
+       ORDER BY n.no DESC
+       LIMIT #{pageIndex}, #{pageSize}
+   </select>
+   
+      
+   <!-- 공지사항 목록 총 갯수 조회 -->
+   <select id="noticeCnt" resultType="int">
+      /*kr.kosmo.jobkorea.system.dao.NoticeDao.noticeCnt*/
+      SELECT COUNT(*)
+      FROM    tb_notice
+      <where>
+         <if test ="(title != null) and (!title.equals(''))">
+             and n.title  Like CONCAT('%', #{title}, '%')
+         </if>
+         <if test ="(from_date != null) and (!from_date.equals(''))">
+             and n.date  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         </if>         
+         <if test ="(to_date != null) and (!to_date.equals(''))">
+             and n.date  <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         </if>      
+      </where>
+      ORDER BY no DESC
+   </select>   
+      
+   
+   
+   
+   <!-- 공지사항 단건 조회 : 공지제목 클릭시 -->
+   <select id = "noticeDetail" resultType = "kr.happyjob.study.system.model.NoticeModel">
+      SELECT
+                u.loginID as loginId
+            ,   n.ntc_title as noticeTitle
+            ,   n.ntc_content as noticeContent
+            ,   n.ntc_no as noticeNo
+      FROM   tb_notice n
+         LEFT JOIN   tb_userinfo u
+         ON         n.loginID = u.loginID
+      WHERE n.ntc_no = #{noticeNo}
+   </select>
+   
+      
+      
+   <!-- 공지사항 신규등록(저장) :  -->
+   <insert id = "insertNotice" parameterType="java.util.Map">
+       <selectKey resultType="int" keyProperty="newnoticeNo" order="BEFORE">
+            SELECT IFNULL(MAX(no),0) + 1 FROM tb_notice 
+        </selectKey> 
+      INSERT
+      INTO     tb_notice
+            (
+               no, loginID, title, contents, `date`
+            )
+      VALUES
+            (
+                 #{newnoticeNo}
+               , #{loginId}
+               , #{noticeTitle}
+               , #{noticeContent}
+               , NOW()
+            )
+   </insert>
+   
+   <!-- 공지사항 수정-->
+   <update id = "updateNotice">
+      UPDATE tb_notice
+      SET      title = #{noticeTitle}
+            ,   contents = #{noticeContent}
+            ,   `date` = NOW()
+      WHERE   no = #{noticeNo}
+   </update>
+   
+   <!-- 공지사항 삭제-->
+   <delete id="deleteNotice">
+      DELETE
+      FROM    tb_notice
+      WHERE   no = #{noticeNo}
+   </delete>
+
+</mapper>

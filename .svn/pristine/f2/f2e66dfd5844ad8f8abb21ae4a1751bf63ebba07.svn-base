@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.sales.dao.ArmngDao">
+
+	<select id="armngtitle" resultType="kr.happyjob.study.sales.model.ArmngModel">
+		select cc.receive_date,
+			   cc.receive_num, 
+			   cc.client_nm, 
+			   cc.account_cd, 
+			   cc.prod_nm, 
+			   cc.price, 
+			   dc.detail_name,
+			   cc.product_cd
+		    from (
+		            select  bb.receive_date, bb.receive_num, bb.client_nm, bb.account_cd, sp.prod_nm, sp.price, bb.product_cd
+				      from (
+				              select aa.receive_date, aa.receive_num, aa.product_cd, aa.account_cd, ec.client_nm
+				               from(
+				                     select ri.receive_date, ri.receive_num, ri.account_cd, rp.client_cd, rp.product_cd
+				                       from (
+				                               select receive_date, receive_num, account_cd
+				                                 from tb_receive_info
+				                                where deposit_yn='n'
+				                            ) ri 
+				                            left join receive_prod rp on ri.receive_num = rp.receive_num
+				                    ) aa 
+				                    inner join tb_erp_client ec on aa.client_cd=ec.client_cd
+				             ) bb 
+				             inner join tb_scm_product sp on bb.product_cd=sp.product_cd
+				 ) cc 
+		    	 inner join tb_detail_code dc on cc.account_cd = dc.detail_code
+  
+			<where>
+			<if
+				test="(receiveStart != null) and (!receiveStart.equals('')) and (receiveEnd != null) and (!receiveName.equals(''))">
+				AND cc.receive_date between #{receiveStart} and #{receiveEnd}
+			</if>
+			<if
+				test="(receiveName != null) and (!receiveName.equals(''))">
+				AND cc.client_nm = #{receiveName}
+			</if>
+			<if
+				test="(scm_yn != null) and (!scm_yn.equals(''))">
+				AND cc.account_cd = #{scm_yn}
+			</if>
+			</where> 
+			LIMIT #{pageIndex}, #{pageSize}	
+	</select>
+
+	<select id="armngSelect" resultType="kr.happyjob.study.sales.model.ArmngModel">
+		select bb.receive_date,
+			   bb.receive_num, 
+			   bb.detail_name, 
+			   bb.supply_val, 
+			   bb.supply_tax, 
+			   bb.supply_cost, 
+			   bb.client_nm, 
+			   bb.emp_nm, 
+			   bb.emp_hp, 
+			   bb.product_cd, 
+			   bb.estimate_cnt, 
+			   bb.price, 
+			   bb.tax, 
+        	   bb.account_cd,
+			   bb.unit_cost, 
+			   bb.prod_nm,
+			   bb.price as sum_cost,
+			   bb.estimate_cnt as total_estimate_cnt
+		  from (
+		        select aa.receive_date, 
+				       aa.receive_num, 
+				       aa.detail_name, 
+				       aa.supply_val, 
+				       aa.supply_tax, 
+				       aa.supply_cost, 
+				       aa.client_nm, 
+				       aa.emp_nm, 
+				       aa.emp_hp,
+				       aa.account_cd,
+				       aa.product_cd, 
+				       aa.estimate_cnt, 
+				       aa.price, 
+				       aa.tax, 
+				       aa.unit_cost,
+               sp.prod_nm
+				  from (                                                                                                                                                          
+				               select ri.receive_date, ri.receive_num, ri.detail_name, ri.supply_val, ri.supply_tax, ri.supply_cost, ri.account_cd, ec.client_nm, ec.emp_nm, ec.emp_hp, rp.product_cd, rp.estimate_cnt, rp.price, rp.tax, rp.unit_cost  
+				                 from (
+				                         select rrl.receive_date, rrl.receive_num, rrl.client_cd, rrl.supply_val, rrl.supply_tax, rrl.supply_cost, rrl.account_cd,
+				                                (
+				                                   select detail_name from tb_detail_code dc where dc.detail_code=#{account_cd}
+                                        ) as detail_name
+						                      from tb_receive_info rrl
+						                     where deposit_yn='n' and receive_num=#{receive_num}
+						                  ) ri 
+				                      left join tb_erp_client ec on ri.client_cd=ec.client_cd
+                              left join receive_prod rp on ri.receive_num=rp.receive_num
+				        ) aa
+			         left join tb_scm_product sp on aa.product_cd=sp.product_cd
+          ) bb
+      where bb.product_cd=#{product_cd}
+      
+      
+        
+	</select>
+	
+	<update id="armngUpdate">
+		UPDATE tb_receive_info
+		
+		   SET deposit_yn = 'y' 
+			   
+	    where receive_num = #{booking_no}
+		  	
+	</update>
+</mapper>
+

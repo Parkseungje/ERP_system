@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.accounting.dao.AccSlipDao">
+
+	<select id="accSlipList" resultType="kr.happyjob.study.accounting.model.AccSlipModel">
+  SELECT DATE_FORMAT(ASP.occur_date, '%Y-%m-%d') AS occur_date,
+						ASP.slip_no AS slip_no,
+						case WHEN LEFT(ASP.account_cd ,1) = 'D' OR LEFT(ASP.account_cd ,1) = 'E' OR LEFT(ASP.account_cd ,1) = 'F' THEN DI.dv_no ELSE RI.receive_num END  AS receive_no,
+						GC.group_code AS group_code, 
+						GC.group_name AS group_name,
+						UI.name AS rp_nm,
+						case WHEN LEFT(ASP.account_cd ,1) = 'D' OR LEFT(ASP.account_cd ,1) = 'E' OR LEFT(ASP.account_cd ,1) = 'F' THEN DI.acc_name ELSE EC.client_nm END AS acc_name,
+						IF(AC.detail_name = '수입', ASP.amt, 0) AS en_amt,
+						IF(AC.detail_name = '지출', ASP.amt, 0) AS dv_amt,
+						ASP.note AS note,
+            ASP.detail_account_cd
+      FROM tb_acc_slip ASP
+      LEFT JOIN tb_receive_info RI on ASP.slip_no = RI.slip_no
+      LEFT JOIN tb_userinfo UI on ASP.direct_id = UI.loginID
+      LEFT JOIN tb_erp_client EC on ASP.client_cd = EC.client_cd
+      LEFT JOIN tb_group_code GC on ASP.account_cd = GC.group_code
+      LEFT JOIN (SELECT AC.detail_account_cd, DC.detail_name
+                 FROM tb_account AC
+                 LEFT JOIN tb_detail_code DC 
+                   ON AC.account_type = DC.detail_code
+                WHERE DC.group_code = 'REVEXPcd') AC ON ASP.detail_account_cd = AC.detail_account_cd
+      LEFT JOIN(SELECT UI.name , DI.dv_no, DI.acc_name, DI.detail_account_cd, DI.loginID
+                    FROM tb_dv_info DI
+                    LEFT JOIN tb_userinfo UI ON UI.loginID = DI.loginID ) DI ON ASP.direct_id = DI.loginID
+      where 1=1
+			<if test="(from_date != null) and (!from_date.equals('')) and (to_date != null) and (!to_date.equals(''))">
+				AND ASP.occur_date between STR_TO_DATE(#{from_date}, '%Y-%m-%d')    and STR_TO_DATE(#{to_date}, '%Y-%m-%d') 
+        	 </if>  
+	         <if test ="(acc_cb != null) and (!acc_cb.equals(''))">
+				AND EC.client_nm = #{acc_cb}
+	         </if>
+	         <if test ="(g_cd != null) and (!g_cd.equals(''))">
+	             AND GC.group_code  Like CONCAT('%', #{g_cd}, '%')
+	         </if>
+	        AND ASP.detail_account_cd not in('102', '103', '201', '202') 
+	        ORDER BY ASP.slip_no DESC
+			LIMIT #{pageIndex}, #{pageSize}
+	</select>
+
+	<select id="accSlipCnt" resultType="int">
+		SELECT Count(ASP.slip_no)
+      FROM tb_acc_slip ASP
+      LEFT JOIN tb_receive_info RI on ASP.slip_no = RI.slip_no
+      LEFT JOIN tb_userinfo UI on ASP.direct_id = UI.loginID
+      LEFT JOIN tb_erp_client EC on ASP.client_cd = EC.client_cd
+      LEFT JOIN tb_group_code GC on ASP.account_cd = GC.group_code
+      LEFT JOIN (SELECT AC.detail_account_cd, DC.detail_name
+                 FROM tb_account AC
+                 LEFT JOIN tb_detail_code DC 
+                   ON AC.account_type = DC.detail_code
+                WHERE DC.group_code = 'REVEXPcd') AC ON ASP.detail_account_cd = AC.detail_account_cd
+      LEFT JOIN(SELECT UI.name , DI.dv_no, DI.acc_name, DI.detail_account_cd, DI.loginID
+                    FROM tb_dv_info DI
+                    LEFT JOIN tb_userinfo UI ON UI.loginID = DI.loginID ) DI ON ASP.direct_id = DI.loginID
+		<where>
+		 <if test="(from_date != null) and (!from_date.equals('')) and (to_date != null) and (!to_date.equals(''))">
+				AND ASP.occur_date BETWEEN #{from_date} AND #{to_date}
+         </if>  
+         <if test ="(acc_cb != null) and (!acc_cb.equals(''))">
+			AND EC.client_nm = #{acc_cb}
+         </if>
+         <if test ="(g_cd != null) and (!g_cd.equals(''))">
+             AND GC.group_code  Like CONCAT('%', #{g_cd}, '%')
+         </if>
+			 AND ASP.detail_account_cd not in('102', '103', '201', '202') 
+		</where>
+	</select>
+	
+	<select id="accSlipModal" resultType="kr.happyjob.study.accounting.model.AccSlipModel">
+  SELECT DATE_FORMAT(ASP.occur_date, '%Y-%m-%d') AS occur_date,
+						ASP.slip_no AS slip_no,
+						case WHEN LEFT(ASP.account_cd ,1) = 'D' OR LEFT(ASP.account_cd ,1) = 'E' OR LEFT(ASP.account_cd ,1) = 'F' THEN DI.dv_no ELSE RI.receive_num END  AS receive_no,
+						GC.group_code AS group_code, 
+						GC.group_name AS group_name,
+						UI.name AS rp_nm,
+						case WHEN LEFT(ASP.account_cd ,1) = 'D' OR LEFT(ASP.account_cd ,1) = 'E' OR LEFT(ASP.account_cd ,1) = 'F' THEN DI.acc_name ELSE EC.client_nm END AS acc_name,
+						IF(AC.detail_name = '수입', ASP.amt, 0) AS en_amt,
+						IF(AC.detail_name = '지출', ASP.amt, 0) AS dv_amt,
+						ASP.note AS note,
+            ASP.detail_account_cd
+      FROM tb_acc_slip ASP
+      LEFT JOIN tb_receive_info RI on ASP.slip_no = RI.slip_no
+      LEFT JOIN tb_userinfo UI on ASP.direct_id = UI.loginID
+      LEFT JOIN tb_erp_client EC on ASP.client_cd = EC.client_cd
+      LEFT JOIN tb_group_code GC on ASP.account_cd = GC.group_code
+      LEFT JOIN (SELECT AC.detail_account_cd, DC.detail_name
+                 FROM tb_account AC
+                 LEFT JOIN tb_detail_code DC 
+                   ON AC.account_type = DC.detail_code
+                WHERE DC.group_code = 'REVEXPcd') AC ON ASP.detail_account_cd = AC.detail_account_cd
+      LEFT JOIN(SELECT UI.name , DI.dv_no, DI.acc_name, DI.detail_account_cd, DI.loginID
+                    FROM tb_dv_info DI
+                    LEFT JOIN tb_userinfo UI ON UI.loginID = DI.loginID ) DI ON ASP.direct_id = DI.loginID
+      where 1 = 1
+			 <if test="(from_date != null) and (!from_date.equals('')) and (to_date != null) and (!to_date.equals(''))">
+					AND ASP.occur_date BETWEEN #{from_date} AND #{to_date}
+	         </if>  
+	         <if test ="(acc_cb != null) and (!acc_cb.equals(''))">
+				AND EC.client_nm = #{acc_cb}
+	         </if>
+	         <if test ="(g_cd != null) and (!g_cd.equals(''))">
+	             AND GC.group_code  Like CONCAT('%', #{g_cd}, '%')
+	         </if>
+      		 AND ASP.detail_account_cd not in ('102', '103', '201', '202')
+	        ORDER BY ASP.slip_no DESC
+	</select>
+</mapper>

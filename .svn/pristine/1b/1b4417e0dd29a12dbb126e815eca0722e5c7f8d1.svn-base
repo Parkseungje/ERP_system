@@ -1,0 +1,5 @@
+package kr.happyjob.study.employee.dao;
+
+public interface EmptaDAO {
+
+}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.mainlogin.dao.MainLoginDao">
+	<!-- 사용자 로그인 체크 -->
+	<select id="checkMainLogin" resultType="String">
+		SELECT user_Type
+		FROM
+		tb_userinfo
+		WHERE loginId = #{lgn_Id}
+		AND password = #{pwd}
+	</select>
+	
+	<!-- 사용자 로그인 -->
+	<select id="selectMainLogin" resultType="kr.happyjob.study.mainlogin.model.MainLoginInfoModel">
+		SELECT loginId as lgn_id,
+				  name as usr_nm,
+				  user_Type as mem_author
+	</select>
+</mapper>

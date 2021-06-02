@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.employee.dao.EmpTaCalendarDao">
+	<select id = "empTaList" resultType="kr.happyjob.study.employee.model.EmpTaModel">
+		SELECT tm.ta_yn, DATE_FORMAT(tm.ta_reg_date, '%Y-%m-%d') AS ta_reg_date, ui.name, emp.dept_cd, tm.kind_hol
+			FROM tb_ta_mgt tm 
+			LEFT JOIN tb_userinfo ui ON ui.loginID = tm.loginID 
+			LEFT JOIN tb_emp emp ON emp.loginID = tm.loginID
+		WHERE DATE_FORMAT(tm.ta_reg_date, '%Y-%m-%d') BETWEEN #{startDate} AND #{endDate}
+	</select>
+</mapper>

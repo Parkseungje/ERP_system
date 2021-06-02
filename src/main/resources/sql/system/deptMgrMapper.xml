@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.happyjob.study.system.dao.deptMgrDao">
+
+
+   <!-- 부서코드 조회 -->
+   <select id = "deptList" resultType = "kr.happyjob.study.system.model.DeptMgrModel">
+      SELECT  dept_cd
+            , dept_name
+      FROM    tb_dept
+       <where>
+         <if test ="(dept_nm != null) and (!dept_nm.equals(''))">
+             and dept_name Like CONCAT('%', #{dept_nm}, '%')
+         </if>
+       </where>
+       ORDER BY dept_cd DESC
+       LIMIT #{pageIndex}, #{pageSize}
+   </select>
+   
+      
+   <!-- 부서관리 목록 총 갯수 조회 -->
+   <select id="deptCount" resultType="int">
+      /*kr.kosmo.jobkorea.system.dao.deptMgrDao.deptCount*/
+      SELECT COUNT(*)
+      FROM    tb_dept
+       <where>
+         <if test ="(dept_nm != null) and (!dept_nm.equals(''))">
+             and dept_name Like CONCAT('%', #{dept_nm}, '%')
+         </if>
+       </where>
+      ORDER BY dept_cd DESC
+   </select>   
+   
+   
+   <!-- 부서관리 단건 조회 : 부서코드 클릭시 -->
+   <select id = "deptdetail" resultType = "kr.happyjob.study.system.model.DeptMgrModel">
+      SELECT dept_cd, dept_name           
+      FROM   tb_dept
+      WHERE  dept_cd = #{deptNo}
+   </select>
+         
+               
+   <!-- 부서관리 신규등록(저장) :  -->
+   <insert id = "insertDept" parameterType="java.util.Map">
+       <selectKey resultType="string" keyProperty="deptCd" order="BEFORE">
+            SELECT IFNULL(MAX(dept_cd),0) + 1 FROM tb_dept
+        </selectKey> 
+      INSERT
+      INTO       tb_dept
+            (
+                 dept_cd, dept_name
+            )
+      VALUES
+            (
+                 #{dept_cd}
+               , #{dept_nm}
+            )
+   </insert>
+   
+   
+   <!-- 부서코드 수정-->
+   <update id = "updateDept">
+      UPDATE tb_dept
+      SET    dept_name = #{dept_nm}
+      WHERE  dept_cd = #{dept_cd}
+   </update>
+   
+   
+   <!-- 부서코드 삭제-->
+   <delete id="deptdelete">
+      DELETE
+      FROM   tb_dept
+      WHERE  dept_cd = #{dept_cd}  
+   </delete>
+
+</mapper>

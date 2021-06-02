@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="kr.happyjob.study.employee.dao.EmpPayHistDAO">
+
+<!-- 급여내역  목록 조회 -->
+						
+	 <select id="empPayHistList" resultType="kr.happyjob.study.employee.model.EmployeeModel">
+	     select  SH.year_salary
+         ,  SH.salary
+         ,  SH.nat_ps
+         ,  SH.h_insure
+         ,  SH.e_insure
+         ,  SH.income_tax
+         ,  SH.net_pay
+         ,  SH.ohs_insure
+         ,  extra_pay
+         ,  SH.loginID
+	 	  from tb_sal_his SH
+      left join (SELECT SUM(IF((MONTH(DI.dv_use_date) = RIGHT(#{searchmonth},2)  - 1), DI.dv_amt, 0)) AS extra_pay, DI.loginID 
+                   FROM tb_dv_info DI 
+                  WHERE (DI.dv_no LIKE 'D%' OR DI.dv_no LIKE 'E%' OR DI.dv_no LIKE 'F%') AND (DI.dv_app_yn LIKE '2') AND DI.loginID = #{loginID}) AL ON SH.loginID = AL.loginID
+    where SH.loginID =  #{loginID}
+    group by SH.loginID
+	 </select>
+</mapper>

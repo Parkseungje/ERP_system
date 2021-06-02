@@ -1,0 +1,33 @@
+package kr.happyjob.study.accounting.controller;
+
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+//import kr.happyjob.study.employee.service.EmpMgtService;
+
+@Controller
+@RequestMapping("/accounting/")
+public class accslipController {
+	
+	//@Autowired
+	//EmpMgtService empMgtService;
+	
+	//인사관리 초기화면
+	@RequestMapping("accslip.do")
+	public String initAccSlip(Model model, @RequestParam Map<String, Object> paramMap, HttpServletRequest request,
+			HttpServletResponse response, HttpSession session) throws Exception {
+		
+		
+		return "accounting/accslip";
+	}
+}

@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+
+<!-- 맵퍼네임 -->
+<mapper namespace="kr.happyjob.study.business.dao.EstManagementDao">
+
+
+
+
+
+	<!-- 1.  견적 테이블 목록 조회 -->
+	<select id="estList" resultType="kr.happyjob.study.business.model.EstManagementModel" parameterType ="hashmap" >
+		SELECT    a.estimate_no
+					   ,DATE_FORMAT(a.estimate_date,'%Y-%m-%d')  as estimate_date
+					   ,a.supply_val
+					   ,a.supply_tax
+					   ,a.supply_cost
+					   ,a.client_cd
+					   ,b.client_nm 
+					   ,c.product_cd
+					   ,d.prod_nm
+		FROM estimate_info a <!-- 견적서 테이블 a  -->
+        inner join (tb_erp_client b) ON a.client_cd = b.client_cd     <!--  거래처 테이블 b . 거래처 이름 가져올려고 조인: 검색조건 -->
+        inner join  estimate_prod c ON b.client_cd = c.client_cd  <!--  견적서 제품 정보 테이블. 상품 코드 가져올려고 조인 -->
+        inner join tb_scm_product d ON c.product_cd = d.product_cd <!--  scm 제품 정보테이블.  scm 제품이름 가져올려고  조인 -->
+		
+	 <where>
+         <if test="(client_search != null) and (! client_search.equals(''))">
+             AND a.client_cd like #{client_search}
+         </if>
+         <if test="(from_date != null) and (! from_date.equals(''))">
+  			 AND a.estimate_date  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         </if>
+         <if test="(to_date != null) and (!to_date.equals(''))">
+         	AND a.estimate_date  <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         </if>         
+      </where>
+		ORDER BY a.estimate_no 
+		LIMIT #{pageIndex}, #{pageSize}
+	</select>
+	
+
+	
+
+	<!-- 2. 전체 목록 카운트  -->
+	<select id="estCnt" resultType="int"  parameterType="hashmap">
+<!-- 		SELECT COUNT(estimate_no) 검색 및 전체 목록 뿌릴때의 카운트, cliCnt
+		 FROM estimate_info -->
+		 
+		 
+		 SELECT  COUNT(a.estimate_no)
+					
+		FROM estimate_info a <!-- 견적서 테이블 a  -->
+        inner join (tb_erp_client b) ON a.client_cd = b.client_cd     <!--  거래처 테이블 b . 거래처 이름 가져올려고 조인: 검색조건 -->
+        inner join  estimate_prod c ON b.client_cd = c.client_cd  <!--  견적서 제품 정보 테이블. 상품 코드 가져올려고 조인 -->
+        inner join tb_scm_product d ON c.product_cd = d.product_cd <!--  scm 제품 정보테이블.  scm 제품이름 가져올려고  조인 -->
+		
+	
+	<where>
+         <if test="(client_search != null) and (! client_search.equals(''))">
+             and a.client_cd  = #{client_search} <!-- 카운트 값 매칭 -->
+         </if>
+         <if test="(from_date != null) and (! from_date.equals(''))">
+  				and a.reg_date  <![CDATA[>=]]> STR_TO_DATE(#{from_date}, '%Y-%m-%d')   
+         </if>
+         <if test="(to_date != null) and (!to_date.equals(''))">
+         and a.reg_date  <![CDATA[<=]]> STR_TO_DATE(#{to_date}, '%Y-%m-%d')   
+         </if>         
+      </where>
+		ORDER BY a.estimate_no 
+</select>
+	
+
+
+
+
+
+	<!-- 3. 단건조회  -->
+	<select id ="selectEstList"  resultType ="kr.happyjob.study.business.model.EstManagementModel" >
+
+			SELECT a.estimate_no
+					   ,a.client_cd
+					   ,a.estimate_date
+					   ,a.supply_val
+					   ,a.supply_tax
+					   ,a.supply_cost
+					   ,b.client_cd
+		   			   ,b.cop_no1
+					   ,b.cop_no2
+					   ,b.cop_no3
+					   ,b.client_nm
+					   ,b.emp_nm
+					   ,b.emp_hp
+					   ,b.addr
+					   ,b.addr_detail
+					   ,c.estimate_cnt
+			FROM estimate_info a 
+			INNER JOIN tb_erp_client b ON a.client_cd = b.client_cd
+			INNER JOIN  estimate_prod c ON b.client_cd = c.client_cd 
+			WHERE a.estimate_no = #{estimate_no} 
+	</select>	
+	
+	<insert id="insertEstList" >
+		 <selectKey resultType="String" keyProperty="estimate_no" order="BEFORE">
+							
+				 SELECT
+				    concat(b.client_cd,'-',date_format(now(),'%Y-%m-%d') 
+					             ,'-'   
+					            ,lpad(cast((cast(right(ifnull(max(a.estimate_no),
+					            concat(b.client_cd,DATE_FORMAT(NOW(),'%Y-%m-%d'))),3) as unsigned) + 1) as char),3,'0'))
+				FROM estimate_info a
+				    INNER JOIN  tb_erp_client  b on a.client_cd = b.client_cd
+				WHERE b.client_cd = #{client_search1} 
+
+	        </selectKey> 
+	
+
+			
+			INSERT INTO estimate_info (
+															estimate_no
+															,client_cd
+								                            ,supply_cost
+															,supply_tax
+															,supply_val
+															,estimate_date
+															
+														)
+			VALUES(
+							#{estimate_no}
+							,#{client_search1}
+							, (    SELECT    sp.price    FROM tb_scm_product sp WHERE  sp.product_cd = #{divproducttall}     )
+					        , (    SELECT    sp2.price  / 10   FROM tb_scm_product sp2 WHERE  sp2.product_cd = #{divproducttall}     )
+					       ,  (   SELECT   sp3.price + (price  / 10)   FROM tb_scm_product sp3 WHERE  sp3.product_cd = #{divproducttall}  ) 
+					       ,now()
+			);
+			
+							
+					
+
+		</insert>
+
+		
+		<insert id ="updateInsertEstList">
+					   INSERT INTO estimate_prod (
+																		client_cd
+																		,estimate_no
+																		,product_cd
+																		,estimate_cnt
+																		,supply_cnt
+																		,supply_tax
+																		,supply_val
+																
+																	 )
+					
+						VALUES(			
+										#{client_search1}
+										, (select max(estimate_no) from estimate_info where client_cd = #{client_search1})  <!-- 분석필요   -->
+										,#{divproducttall}
+										,#{estimate_cnt}
+									    , (    SELECT    sp.price    FROM tb_scm_product sp WHERE  sp.product_cd = #{divproducttall}     )
+							            , (    SELECT    sp2.price  / 10   FROM tb_scm_product sp2 WHERE  sp2.product_cd = #{divproducttall}     )
+							            , (   SELECT   sp3.price + (price  / 10)   FROM tb_scm_product sp3 WHERE  sp3.product_cd = #{divproducttall}  )
+															
+									)
+		
+		</insert>
+	
+	
+	<!-- 5.단건삭제 -->
+<!-- 	<delete id="deleteEstList">
+		DELETE FROM estimate_info WHERE estimate_no = #{estimate_no}
+	</delete> -->
+	
+
+	<!-- 6. 모달 안 리스트 뿌리기  -->
+	<select id="estListDetail" resultType="kr.happyjob.study.business.model.EstManagementModel" parameterType ="hashmap" >
+		SELECT    a.estimate_no
+					   ,DATE_FORMAT(a.estimate_date,'%Y-%m-%d')  as estimate_date
+					   ,a.client_cd
+				   	   ,a.supply_val
+					   ,a.supply_tax
+					   ,a.supply_cost
+					   ,b.client_nm 
+		     	   	   ,c.product_cd
+		     	   	   ,c.estimate_cnt
+					   ,d.prod_nm
+		FROM estimate_info a <!-- 견적서 테이블 a  -->
+        inner join (tb_erp_client b) ON a.client_cd = b.client_cd     <!--  거래처 테이블 b . 거래처 이름 가져올려고 조인: 검색조건 -->
+        inner join  estimate_prod c ON b.client_cd = c.client_cd  <!--  견적서 제품 정보 테이블. 상품 코드 가져올려고 조인 -->
+        inner join tb_scm_product d ON c.product_cd = d.product_cd <!--  scm 제품 정보테이블.  scm 제품이름 가져올려고  조인 -->
+	
+		WHERE a.estimate_no = #{estimate_no} 
+
+	</select>
+	
+	<!-- 7.모달 안 리스트 뿌리기 카운트  -->
+	<select id="estDetailCnt" resultType="int"  parameterType="hashmap">
+
+		 SELECT  COUNT(a.estimate_no)
+					
+		FROM estimate_info a <!-- 견적서 테이블 a  -->
+        inner join (tb_erp_client b) ON a.client_cd = b.client_cd     <!--  거래처 테이블 b . 거래처 이름 가져올려고 조인: 검색조건 -->
+        inner join  estimate_prod c ON b.client_cd = c.client_cd  <!--  견적서 제품 정보 테이블. 상품 코드 가져올려고 조인 -->
+        inner join tb_scm_product d ON c.product_cd = d.product_cd <!--  scm 제품 정보테이블.  scm 제품이름 가져올려고  조인 -->
+		
+		
+		WHERE a.estimate_no = #{estimate_no} 
+   </select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+</mapper>
